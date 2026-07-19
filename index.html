@@ -2,166 +2,51 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PhotoEve - Mobile Wheel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHOTO EVE - Quản Lý Bộ Đếm</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>body { touch-action: manipulation; }</style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
-<body class="bg-gray-900 min-h-screen flex flex-col items-center justify-center text-white font-sans p-4 select-none">
+<body class="bg-gray-900 min-h-screen flex flex-col items-center justify-center text-white p-4">
     
-    <!-- KHU VỰC TIÊU ĐỀ: Đã ẩn dòng chữ giới hạn giải thưởng để giao diện tinh gọn hơn -->
-    <div class="text-center mb-8">
-        <h1 class="text-2xl font-black tracking-widest text-yellow-400 drop-shadow-md">PHOTO EVE</h1>
-    </div>
+    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-full max-w-sm text-center shadow-xl">
+        <h1 class="text-lg font-black text-yellow-400 mb-1">PHOTO EVE DASHBOARD</h1>
+        <p class="text-xs text-gray-400 mb-6 font-medium">Theo dõi tổng số lượt quay từ xa</p>
+        
+        <div class="bg-gray-900 border border-gray-700 rounded-xl py-8 mb-4">
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Lượt quay hôm nay</p>
+            <p id="total-spins-display" class="text-6xl font-black text-green-400 mt-2">0</p>
+        </div>
 
-    <!-- KHU VỰC VÒNG QUAY -->
-    <div class="relative w-64 h-64 sm:w-80 sm:h-80 flex items-center justify-center mb-6">
-        <div class="absolute top-0 z-10 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-yellow-400"></div>
-        <canvas id="wheel" width="400" height="400" class="w-full h-full rounded-full border-4 border-gray-700 bg-gray-800 transition-transform duration-[4000ms] ease-out"></canvas>
-        <button id="spin-btn" class="absolute w-14 h-14 bg-yellow-400 text-gray-950 font-black rounded-full text-xs uppercase border-2 border-white shadow-xl z-20 active:scale-90 transition-transform">QUAY</button>
-    </div>
-
-    <!-- KHU VỰC HỘP KẾT QUẢ -->
-    <div id="result-box" class="hidden text-center bg-gray-800 border border-gray-700 px-4 py-3 rounded-xl max-w-xs w-full shadow-lg">
-        <h2 class="text-sm font-bold text-yellow-400 mb-0.5">🎉 KẾT QUẢ 🎉</h2>
-        <div id="prize-text" class="text-base font-extrabold text-white my-1"></div>
-        <p class="text-[10px] text-gray-500">*Hãy chụp màn hình lại để nhận quà.</p>
+        <div id="current-date" class="text-xs text-gray-500 font-mono">Ngày: --/--/----</div>
     </div>
 
     <script>
-        const canvas = document.getElementById('wheel');
-        const ctx = canvas.getContext('2d');
-        const spinBtn = document.getElementById('spin-btn');
-        const resultBox = document.getElementById('result-box');
-        const prizeText = document.getElementById('prize-text');
-
-        // THIẾT LẬP ÂM THANH: Sử dụng nguồn âm thanh trực tuyến miễn phí vĩnh viễn
-        // Bạn có thể đổi link trong dấu nháy kép nếu muốn thay nhạc khác
-        const soundTick = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-84.wav'); // Tiếng tạch khi quay
-        const soundWin = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav');   // Tiếng chuông thắng giải
+        // CẤU HÌNH: Đường dẫn Realtime Database chuẩn cho dự án của bạn
+        const firebaseConfig = { 
+            databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
+        };
         
-        soundTick.volume = 0.6; // Điều chỉnh âm lượng (từ 0.0 đến 1.0)
-        soundWin.volume = 0.8;
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-        const segments = [
-            { type: "nhat", text: "Giải Nhất: Túi Tote", color: "#EF4444" },
-            { type: "ba", text: "Giải Ba: Móc Khóa", color: "#10B981" },
-            { type: "nhi", text: "Giải Nhì: Set Sticker", color: "#3B82F6" },
-            { type: "miss", text: "May Mắn Lần Sau", color: "#4B5563" },
-            { type: "ba", text: "Giải Ba: Móc Khóa", color: "#10B981" },
-            { type: "nhi", text: "Giải Nhì: Set Sticker", color: "#3B82F6" }
-        ];
-        
-        const numSegments = segments.length; 
-        const segmentAngle = 360 / numSegments; 
-        let isSpinning = false;
-
-        function drawWheel() {
-            const radius = canvas.width / 2; 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            segments.forEach((seg, i) => {
-                const radAngle = (i * segmentAngle * Math.PI) / 180; 
-                const radNextAngle = ((i + 1) * segmentAngle * Math.PI) / 180;
-                ctx.beginPath(); 
-                ctx.fillStyle = seg.color; 
-                ctx.moveTo(radius, radius); 
-                ctx.arc(radius, radius, radius, radAngle, radNextAngle); 
-                ctx.closePath(); 
-                ctx.fill();
-                
-                ctx.save(); 
-                ctx.translate(radius, radius); 
-                ctx.rotate(radAngle + (segmentAngle * Math.PI) / 360); 
-                ctx.textAlign = "right"; 
-                ctx.fillStyle = "#FFFFFF"; 
-                ctx.font = "bold 13px sans-serif"; 
-                ctx.fillText(seg.text, radius - 25, 5); 
-                ctx.restore();
-            });
-        }
-
-        function getYearWeekString(date) {
-            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-            const dayNum = d.getUTCDay() || 7; 
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-            return `${d.getUTCFullYear()}-W${Math.ceil((((d - yearStart) / 86400000) + 1) / 7)}`;
-        }
-
-        function getFormattedDate(date) { 
-            return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`; 
-        }
-
-        function determinePrizeType() {
-            const now = new Date(); 
-            const todayStr = getFormattedDate(now); 
-            const thisWeekStr = getYearWeekString(now);
-            
-            const lastNhatWeek = localStorage.getItem('last_nhat_week'); 
-            const lastNhiDate = localStorage.getItem('last_nhi_date'); 
-            const lastBaDate = localStorage.getItem('last_ba_date');
-            
-            let nhatAvailable = lastNhatWeek !== thisWeekStr; 
-            let nhiAvailable = true;
-            
-            if (lastNhiDate) {
-                const diffDays = (now.getTime() - new Date(lastNhiDate).getTime()) / (1000 * 60 * 60 * 24);
-                if (diffDays < 2) nhiAvailable = false;
-            }
-            let baAvailable = lastBaDate !== todayStr;
-            
-            const rand = Math.floor(Math.random() * 100) + 1;
-            if (rand <= 5 && nhatAvailable) return "nhat";
-            if (rand <= 25 && nhiAvailable) return "nhi";
-            if (rand <= 75 && baAvailable) return "ba";
-            return "miss";
-        }
-
-        function savePrizeWin(type) {
+        function getTodayString() {
             const now = new Date();
-            if (type === "nhat") localStorage.setItem('last_nhat_week', getYearWeekString(now));
-            if (type === "nhi") localStorage.setItem('last_nhi_date', getFormattedDate(now));
-            if (type === "ba") localStorage.setItem('last_ba_date', getFormattedDate(now));
+            return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
         }
 
-        spinBtn.addEventListener('click', () => {
-            if (isSpinning) return; 
-            isSpinning = true; 
-            resultBox.classList.add('hidden');
-            
-            // Phát hiệu ứng âm thanh quay vòng liên tục bằng cách lặp lại tiếng click ngắn
-            let tickInterval = setInterval(() => {
-                soundTick.currentTime = 0;
-                soundTick.play().catch(() => {});
-            }, 150);
-            
-            const targetType = determinePrizeType(); 
-            const validIndices = [];
-            
-            segments.forEach((seg, index) => { 
-                if (seg.type === targetType) validIndices.push(index); 
-            });
-            
-            const chosenSegmentIndex = validIndices[Math.floor(Math.random() * validIndices.length)];
-            const targetAngleCenter = 360 - (chosenSegmentIndex * segmentAngle) - (segmentAngle / 2);
-            
-            canvas.style.transform = `rotate(${(360 * 5) + (targetAngleCenter + 90) % 360}deg)`;
-            
-            setTimeout(() => {
-                clearInterval(tickInterval); // Dừng tiếng âm thanh quay bánh xe
-                isSpinning = false; 
-                savePrizeWin(targetType); 
-                
-                // Phát âm thanh vui mừng khi dừng quay và hiển thị phần thưởng
-                soundWin.currentTime = 0;
-                soundWin.play().catch(() => {});
-                
-                prizeText.innerText = segments[chosenSegmentIndex].text; 
-                resultBox.classList.remove('hidden'); 
-            }, 4000);
-        });
+        const spinsDisplay = document.getElementById('total-spins-display');
+        const dateDisplay = document.getElementById('current-date');
+        const todayStr = getTodayString();
 
-        drawWheel();
+        dateDisplay.innerText = `Ngày theo dõi: ${todayStr}`;
+
+        // ĐỌC DỮ LIỆU THỜI GIAN THỰC
+        database.ref('total_spins/' + todayStr).on('value', (snapshot) => {
+            const total = snapshot.val() || 0;
+            spinsDisplay.innerText = total; 
+        });
     </script>
 </body>
 </html>
