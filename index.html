@@ -1,49 +1,13 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHOTO EVE - Vòng Quay May Mắn</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <style>
-        body { background-color: #0f172a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 400px; margin: 0 auto; position: relative; }
-        h1 { color: #ffcc00; margin-bottom: 5px; font-size: 28px; }
-        .sub-text { color: #94a3b8; font-size: 14px; margin-bottom: 30px; transition: opacity 0.3s ease; }
-        .result-text { color: #10b981; font-size: 22px; font-weight: bold; margin-bottom: 20px; min-height: 33px; display: none; animation: popIn 0.5s ease; }
-        .wheel-wrapper { position: relative; width: 320px; height: 320px; margin: 0 auto; }
-        canvas { border-radius: 50%; border: 5px solid #ffcc00; transition: transform 4s ease-out; width: 100%; height: 100%; }
-        .spin-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background: #ffcc00; color: #0f172a; border: none; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; }
-        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid #ffcc00; z-index: 10; }
-        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    </style>
-</head>
-<body>
 
-    <div class="container">
-        <h1>PHOTO EVE</h1>
-        <!-- Dòng chữ luật chơi sẽ ẩn đi khi quay -->
-        <p class="sub-text" id="subText">Vòng quay: 1 tuần/giải Nhất, 2 ngày/giải Nhì, 1 ngày/giải Ba</p>
-        <!-- Vùng hiển thị kết quả trúng thưởng -->
-        <div class="result-text" id="resultText"></div>
-        
-        <div class="wheel-wrapper">
-            <div class="pointer"></div>
-            <canvas id="wheel" width="300" height="300"></canvas>
-            <button class="spin-btn" id="spinBtn">QUAY</button>
-        </div>
-    </div>
-
-    <script>
-        // CẤU HÌNH KẾT NỐI DATABASE FIREBASE CỦA BẠN
+<script>
+        // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
         const firebaseConfig = { 
             databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
+        // 2. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
@@ -72,8 +36,11 @@
         }
         drawWheel();
 
-        // XỬ LÝ QUAY VÀ TÍNH TOÁN KẾT QUẢ ĐẦU RA
+        // 3. XỬ LÝ QUAY TÍT ĐỀU TẤT CẢ CÁC LƯỢT (ĐÃ SỬA LỖI TỐC ĐỘ)
         let isSpinning = false;
+        let animationId = null;
+        let currentAngle = 0; // Lưu góc xoay liên tục
+        
         const spinBtn = document.getElementById('spinBtn');
         const subText = document.getElementById('subText');
         const resultText = document.getElementById('resultText');
@@ -82,36 +49,80 @@
             if (isSpinning) return;
             isSpinning = true;
             
-            // Ẩn dòng chữ mô tả và ẩn kết quả cũ (nếu có)
+            // Ẩn văn bản cũ
             subText.style.display = 'none';
             resultText.style.display = 'none';
             
-            // Tạo số vòng quay ngẫu nhiên (tối thiểu 5 vòng = 1800 độ)
-            const randomShift = Math.floor(Math.random() * 360);
-            const totalDegree = 1800 + randomShift;
-            canvas.style.transform = `rotate(${totalDegree}deg)`;
+            // Dừng hoàn toàn luồng hoạt ảnh cũ trước khi khởi chạy lượt mới
+            if (animationId) cancelAnimationFrame(animationId);
             
-            // Firebase đồng bộ số lượng
+            const randomShift = Math.floor(Math.random() * 360); 
+            const totalDuration = 15000; // Tổng thời gian chạy 15 giây
+            let startTime = null; // Khởi tạo lại bộ đếm thời gian trống cho lượt này
+
+            function animateWheel(timestamp) {
+                // SỬA LỖI CỐT LÕI: Buộc startTime phải lấy mốc thời gian thực của lượt click này
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                if (elapsed < totalDuration) {
+                    let currentSpeed = 0;
+
+                    // GIAI ĐOẠN 1: 4 giây đầu (0s - 4s) -> Ép đạt vận tốc tối đa ngay lập tức
+                    if (elapsed <= 4000) {
+                        currentSpeed = 30; // 30 độ mỗi khung hình, đảm bảo cực tít giống lượt đầu
+                    }
+                    // GIAI ĐOẠN 2: 4 giây tiếp theo (4s - 8s) -> Hạ tốc độ mượt mà
+                    else if (elapsed <= 8000) {
+                        let t = (elapsed - 4000) / 4000;
+                        currentSpeed = 30 * (1 - t * 0.7); 
+                    }
+                    // GIAI ĐOẠN 3: 4 giây tiếp theo (8s - 12s) -> Chạy lừ đừ tạo hồi hộp
+                    else if (elapsed <= 12000) {
+                        let t = (elapsed - 8000) / 4000;
+                        currentSpeed = 9 * (1 - t); 
+                    }
+                    // GIAI ĐOẠN 4: 3 giây cuối (12s - 15s) -> Rung kim lắc ngược tại đích
+                    else {
+                        let t = (elapsed - 12000) / 3000;
+                        let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
+                        let shake = Math.sin(t * Math.PI * 4) * (1 - t) * 15;
+                        currentAngle = targetAngle + shake;
+                    }
+
+                    // Chỉ cộng dồn góc quay khi đang ở 3 giai đoạn đầu
+                    if (elapsed <= 12000) {
+                        currentAngle += currentSpeed;
+                    }
+
+                    // Cập nhật góc xoay vật lý cho Canvas
+                    canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
+                    animationId = requestAnimationFrame(animateWheel);
+                } else {
+                    // KHI DỪNG HẲN: Thiết lập góc đích chuẩn xác để kết toán giải thưởng
+                    const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
+                    canvas.style.transform = `rotate(${finalAngle}deg)`;
+                    currentAngle = finalAngle; // Đồng bộ lại biến góc nền
+                    
+                    const index = Math.floor(((360 - finalAngle + 270) % 360) / (360 / numSectors));
+                    const prize = gifts[index];
+
+                    // Hiện bảng chữ lớn cho khách chụp hình lưu niệm
+                    resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
+                    resultText.style.display = 'block';
+                    
+                    isSpinning = false; // Mở khóa nút bấm cho khách tiếp theo
+                }
+            }
+
+            // Ghi nhận tăng lượt quay đồng bộ lên cơ sở dữ liệu Firebase
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
             database.ref('total_spins/' + todayStr).transaction((currentValue) => {
                 return (currentValue || 0) + 1;
             });
 
-            // Chờ 4 giây cho hiệu ứng vòng quay dừng lại hẳn để tính giải
-            setTimeout(() => {
-                // Thuật toán tìm vị trí ô nằm dưới mũi tên vàng (đỉnh 270 độ)
-                const actualDegrees = randomShift % 360;
-                const index = Math.floor(((360 - actualDegrees + 270) % 360) / (360 / numSectors));
-                const prize = gifts[index];
-
-                // Hiển thị kết quả lên màn hình bằng hiệu ứng nổi bật
-                resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
-                resultText.style.display = 'block';
-                
-                isSpinning = false;
-            }, 4000);
+            // Kích hoạt tiến trình vẽ
+            animationId = requestAnimationFrame(animateWheel);
         });
-    </script>
-</body>
-</html>
+</script>
