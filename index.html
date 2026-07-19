@@ -4,25 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PHOTO EVE - Vòng Quay May Mắn</title>
-    <!-- Nhúng thư viện Firebase tương thích phục vụ lưu trữ đám mây -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         body { background-color: #0f172a; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
         .container { max-width: 400px; margin: 0 auto; position: relative; }
-        h1 { color: #ffcc00; margin-bottom: 5px; }
-        p { color: #94a3b8; font-size: 14px; margin-bottom: 30px; }
+        h1 { color: #ffcc00; margin-bottom: 5px; font-size: 28px; }
+        .sub-text { color: #94a3b8; font-size: 14px; margin-bottom: 30px; transition: opacity 0.3s ease; }
+        .result-text { color: #10b981; font-size: 22px; font-weight: bold; margin-bottom: 20px; min-height: 33px; display: none; animation: popIn 0.5s ease; }
         .wheel-wrapper { position: relative; width: 320px; height: 320px; margin: 0 auto; }
         canvas { border-radius: 50%; border: 5px solid #ffcc00; transition: transform 4s ease-out; width: 100%; height: 100%; }
         .spin-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70px; height: 70px; background: #ffcc00; color: #0f172a; border: none; border-radius: 50%; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 10; }
         .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid #ffcc00; z-index: 10; }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>PHOTO EVE</h1>
-        <p>Vòng quay: 1 tuần/giải Nhất, 2 ngày/giải Nhì, 1 ngày/giải Ba</p>
+        <!-- Dòng chữ luật chơi sẽ ẩn đi khi quay -->
+        <p class="sub-text" id="subText">Vòng quay: 1 tuần/giải Nhất, 2 ngày/giải Nhì, 1 ngày/giải Ba</p>
+        <!-- Vùng hiển thị kết quả trúng thưởng -->
+        <div class="result-text" id="resultText"></div>
         
         <div class="wheel-wrapper">
             <div class="pointer"></div>
@@ -32,14 +36,14 @@
     </div>
 
     <script>
-        // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE CỦA BẠN
+        // CẤU HÌNH KẾT NỐI DATABASE FIREBASE CỦA BẠN
         const firebaseConfig = { 
             databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 2. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
+        // ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
@@ -56,7 +60,6 @@
                 ctx.lineTo(150, 150);
                 ctx.fill();
                 
-                // Vẽ chữ text giải thưởng lên các ô ô màu
                 ctx.save();
                 ctx.translate(150, 150);
                 ctx.rotate(angle + arc / 2);
@@ -69,29 +72,43 @@
         }
         drawWheel();
 
-        // 3. XỬ LÝ SỰ KIỆN KHI KHÁCH ẤN NÚT QUAY
+        // XỬ LÝ QUAY VÀ TÍNH TOÁN KẾT QUẢ ĐẦU RA
         let isSpinning = false;
         const spinBtn = document.getElementById('spinBtn');
+        const subText = document.getElementById('subText');
+        const resultText = document.getElementById('resultText');
         
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
             
-            // Tính toán góc xoay ngẫu nhiên tạo hiệu ứng
-            const randomDegree = Math.floor(Math.random() * 360) + 1800;
-            canvas.style.transform = `rotate(${randomDegree}deg)`;
+            // Ẩn dòng chữ mô tả và ẩn kết quả cũ (nếu có)
+            subText.style.display = 'none';
+            resultText.style.display = 'none';
             
-            // Lấy chuỗi ngày hiện tại dạng YYYY-MM-DD dựa theo múi giờ hệ thống
+            // Tạo số vòng quay ngẫu nhiên (tối thiểu 5 vòng = 1800 độ)
+            const randomShift = Math.floor(Math.random() * 360);
+            const totalDegree = 1800 + randomShift;
+            canvas.style.transform = `rotate(${totalDegree}deg)`;
+            
+            // Firebase đồng bộ số lượng
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-            
-            // Gửi dữ liệu đồng bộ cộng 1 lượt quay thời gian thực lên Firebase
             database.ref('total_spins/' + todayStr).transaction((currentValue) => {
                 return (currentValue || 0) + 1;
             });
 
-            // Mở khóa lại nút bấm sau khi vòng quay dừng lại (sau 4 giây)
+            // Chờ 4 giây cho hiệu ứng vòng quay dừng lại hẳn để tính giải
             setTimeout(() => {
+                // Thuật toán tìm vị trí ô nằm dưới mũi tên vàng (đỉnh 270 độ)
+                const actualDegrees = randomShift % 360;
+                const index = Math.floor(((360 - actualDegrees + 270) % 360) / (360 / numSectors));
+                const prize = gifts[index];
+
+                // Hiển thị kết quả lên màn hình bằng hiệu ứng nổi bật
+                resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
+                resultText.style.display = 'block';
+                
                 isSpinning = false;
             }, 4000);
         });
