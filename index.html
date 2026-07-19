@@ -1,41 +1,50 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHOTO EVE - Quản Lý Bộ Đếm</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-</head>
-<body class="bg-gray-900 min-h-screen flex flex-col items-center justify-center text-white p-4">
-    
-    <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-full max-w-sm text-center shadow-xl">
-        <h1 class="text-lg font-black text-yellow-400 mb-1">PHOTO EVE DASHBOARD</h1>
-        <p class="text-xs text-gray-400 mb-6 font-medium">Theo dõi tổng số lượt quay từ xa</p>
-        
-        <div class="bg-gray-900 border border-gray-700 rounded-xl py-8 mb-4">
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Lượt quay hôm nay</p>
-            <p id="total-spins-display" class="text-6xl font-black text-green-400 mt-2">0</p>
-        </div>
-
-        <div id="current-date" class="text-xs text-gray-500 font-mono">Ngày: --/--/----</div>
-    </div>
-
-    <script>
-        // CẤU HÌNH: Đường dẫn Realtime Database chuẩn cho dự án của bạn
-        const firebaseConfig = { 
-            databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        function getTodayString() {
-            const now = new Date();
-            return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+ctx.beginPath();
+                ctx.arc(150, 150, 150, angle, angle + arc);
+                ctx.lineTo(150, 150);
+                ctx.fill();
+                
+                // Vẽ chữ text giải thưởng lên các ô ô màu
+                ctx.save();
+                ctx.translate(150, 150);
+                ctx.rotate(angle + arc / 2);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 12px sans-serif";
+                ctx.textAlign = "right";
+                ctx.fillText(gifts[i], 140, 5);
+                ctx.restore();
+            }
         }
+        drawWheel();
 
+        // 3. XỬ LÝ SỰ KIỆN KHI KHÁCH ẤN NÚT QUAY
+        let isSpinning = false;
+        const spinBtn = document.getElementById('spinBtn');
+        
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            
+            // Tính toán góc xoay ngẫu nhiên tạo hiệu ứng
+            const randomDegree = Math.floor(Math.random() * 360) + 1800;
+            canvas.style.transform = `rotate(${randomDegree}deg)`;
+            
+            // Lấy chuỗi ngày hiện tại dạng YYYY-MM-DD dựa theo múi giờ hệ thống
+            const now = new Date();
+            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            
+            // Gửi dữ liệu đồng bộ cộng 1 lượt quay thời gian thực lên Firebase
+            database.ref('total_spins/' + todayStr).transaction((currentValue) => {
+                return (currentValue || 0) + 1;
+            });
+
+            // Mở khóa lại nút bấm sau khi vòng quay dừng lại (sau 4 giây)
+            setTimeout(() => {
+                isSpinning = false;
+            }, 4000);
+        });
+    </script>
+</body>
+</html>
         const spinsDisplay = document.getElementById('total-spins-display');
         const dateDisplay = document.getElementById('current-date');
         const todayStr = getTodayString();
