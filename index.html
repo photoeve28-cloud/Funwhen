@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Ép trình duyệt luôn tải bản mới nhất, chống lưu Cache -->
+    <!-- Ép trình duyệt luôn tải bản mới nhất, không lưu Cache cũ -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -28,7 +28,7 @@
             color: #1e293b;
         }
 
-        /* KHỐI THƯƠNG HIỆU PHOTO EVE */
+        /* TÊN THƯƠNG HIỆU PHOTO EVE */
         .brand-header {
             text-align: center;
             margin-bottom: 15px;
@@ -48,7 +48,7 @@
             font-weight: 600;
         }
 
-        /* KHỐI VÒNG QUAY BẰNG CANVAS */
+        /* KHỐI VÒNG QUAY */
         .wheel-container {
             position: relative;
             margin: 10px 0 20px 0;
@@ -72,7 +72,7 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
-        /* NÚT BẤM QUAY */
+        /* NÚT QUAY */
         button {
             padding: 14px 42px;
             font-size: 20px;
@@ -93,7 +93,7 @@
             transform: translateY(1px);
         }
 
-        /* KẾT QUẢ VÀ LƯỢT QUAY */
+        /* BẢNG THÔNG TIN KẾT QUẢ VÀ LƯỢT QUAY IN DAY */
         #resultText {
             margin-top: 15px;
             font-size: 22px;
@@ -103,7 +103,6 @@
             text-align: center;
         }
 
-        /* BẢNG THÔNG TIN THỜI GIAN VÀ THỨ TỰ LƯỢT QUAY */
         .info-panel {
             margin-top: 20px;
             padding: 12px 24px;
@@ -119,7 +118,7 @@
             margin-bottom: 6px;
         }
         .time-display {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: 1px;
@@ -128,41 +127,49 @@
 </head>
 <body>
 
-    <!-- 1. HEADER THƯƠNG HIỆU -->
+    <!-- 1. THƯƠNG HIỆU -->
     <div class="brand-header">
         <h1 class="brand-title">PHOTO EVE</h1>
         <div class="brand-subtitle">VÒNG QUAY MAY MẮN</div>
     </div>
 
-    <!-- 2. VÒNG QUAY CANVAS -->
+    <!-- 2. CANVAS VÒNG QUAY -->
     <div class="wheel-container">
         <div class="pointer"></div>
         <canvas id="wheel" width="320" height="320"></canvas>
     </div>
 
-    <!-- 3. NÚT BẤM VÀ KẾT QUẢ -->
+    <!-- 3. NÚT ĐIỀU KHIỂN VÀ KẾT QUẢ -->
     <button id="spinBtn">QUAY</button>
     <div id="subText" style="margin-top: 10px; color: #64748b; font-size: 14px;">Bấm nút để thử vận may ngay!</div>
     <div id="resultText"></div>
     
-    <!-- 4. THÔNG TIN LƯỢT QUAY VÀ THỜI GIAN THỰC UTC+7 -->
+    <!-- 4. THÔNG TIN THỜI GIAN THỰC UTC+7 VÀ THỨ TỰ LƯỢT QUAY TRONG NGÀY -->
     <div class="info-panel">
-        <div class="spin-count" id="spinCountDisplay">Lượt quay thứ: #--</div>
+        <div class="spin-count" id="spinCountDisplay">Lượt quay trong ngày: #...</div>
         <div class="time-display" id="clockDisplay">00:00:00 - 00/00/0000</div>
     </div>
 
     <script>
-        // CẤU HÌNH FIREBASE REALTIME DATABASE
+        // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
         const firebaseConfig = { 
             databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // CẬP NHẬT THỜI GIAN THỰC MÚI GIỜ HÀ NỘI (UTC+7) VÀO KHỐI HIỂN THỊ
+        // 2. HÀM LẤY KHÓA NGÀY HIỆN TẠI TẠI VIỆT NAM (ĐỊNH DẠNG: YYYY-MM-DD)
+        function getTodayDateKey() {
+            const now = new Date();
+            // Lấy thời gian theo chuẩn Asia/Ho_Chi_Minh
+            const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
+            const formatter = new Intl.DateTimeFormat('en-CA', options); // en-CA trả về dạng YYYY-MM-DD
+            return formatter.format(now);
+        }
+
+        // 3. HIỂN THỊ THỜI GIAN THỰC (GIỜ:PHÚT:GIÂY - NGÀY/THÁNG/NĂM)
         function updateRealTimeClock() {
             const now = new Date();
-            // Lấy thời gian chuẩn theo múi giờ Asia/Ho_Chi_Minh (UTC+7)
             const options = {
                 timeZone: 'Asia/Ho_Chi_Minh',
                 hour: '2-digit',
@@ -186,25 +193,18 @@
         setInterval(updateRealTimeClock, 1000);
         updateRealTimeClock();
 
-        // ĐỒNG BỘ THỨ TỰ LƯỢT QUAY TỪ FIREBASE
-        function getTodayKey() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
+        // 4. ĐỒNG BỘ THỨ TỰ LƯỢT QUAY TRONG NGÀY TỪ FIREBASE
+        const todayKey = getTodayDateKey();
+        const dailySpinRef = database.ref('spins_by_date/' + todayKey);
 
-        const todayStr = getTodayKey();
-        const spinRef = database.ref('total_spins/' + todayStr);
-
-        // Lắng nghe sự thay đổi lượt quay theo thời gian thực
-        spinRef.on('value', (snapshot) => {
-            const count = snapshot.val() || 0;
-            document.getElementById('spinCountDisplay').innerText = `Lượt quay thứ: #${count + 1}`;
+        // Lắng nghe biến động số lượt quay trong ngày liên tục theo thời gian thực
+        dailySpinRef.on('value', (snapshot) => {
+            const currentTotalSpinsToday = snapshot.val() || 0;
+            // Hiển thị lượt tiếp theo sẽ diễn ra
+            document.getElementById('spinCountDisplay').innerText = `Lượt quay trong ngày: #${currentTotalSpinsToday + 1}`;
         });
 
-        // VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
+        // 5. VẼ VÒNG QUAY BẰNG CANVAS
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
@@ -233,7 +233,7 @@
         }
         drawWheel();
 
-        // LOGIC QUAY 24 GIÂY VÀ ĐẦY ĐỦ QUÁN TÍNH
+        // 6. XỬ LÝ CHUYỂN ĐỘNG VÒNG QUAY 24 GIÂY
         let isSpinning = false;
         let animationId = null;
         let currentAngle = 0;
@@ -255,6 +255,11 @@
             const totalDuration = 24000; // 24 giây
             let startTime = null;
 
+            // Ghi nhận tăng lượt quay trong ngày lên Firebase
+            dailySpinRef.transaction((currentValue) => {
+                return (currentValue || 0) + 1;
+            });
+
             function animateWheel(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
@@ -262,7 +267,7 @@
                 if (elapsed < totalDuration) {
                     let currentSpeed = 0;
 
-                    // 10s ĐẦU: Bứt tốc cực tít ngay từ giây đầu
+                    // 10s ĐẦU: Bứt tốc cực tít
                     if (elapsed <= 10000) {
                         currentSpeed = 35; 
                     }
@@ -271,7 +276,7 @@
                         let t = (elapsed - 10000) / 10000;
                         currentSpeed = 35 * (1 - t); 
                     }
-                    // 4s CUỐI: Lắc lư 2 lần kịch tính tại đích
+                    // 4s CUỐI: Lắc lư 2 lần tại đích
                     else {
                         let t = (elapsed - 20000) / 4000;
                         let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
@@ -286,7 +291,7 @@
                     canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
                     animationId = requestAnimationFrame(animateWheel);
                 } else {
-                    // DỪNG HẲN VÀ CẬP NHẬT KẾT QUẢ
+                    // DỪNG HẲN VÀ HIỂN THỊ KẾT QUẢ
                     const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
                     canvas.style.transform = `rotate(${finalAngle}deg)`;
                     currentAngle = finalAngle;
@@ -300,11 +305,6 @@
                     isSpinning = false;
                 }
             }
-
-            // ĐẦU ĐỒNG BỘ TĂNG LƯỢT QUAY TRÊN FIREBASE
-            spinRef.transaction((currentValue) => {
-                return (currentValue || 0) + 1;
-            });
 
             animationId = requestAnimationFrame(animateWheel);
         });
