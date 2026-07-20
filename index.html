@@ -1,134 +1,127 @@
-<!-- BỔ SUNG KHU VỰC HIỂN THỊ NGÀY THÁNG CHỮ TO NGAY DƯỚI VÒNG QUAY -->
-<div id="dateDisplay" style="font-size: 28px; font-weight: bold; text-align: center; margin-top: 20px; color: #1e293b;"></div>
-
 <script>
-    // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
-    const firebaseConfig = { 
-        databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+        // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
+        const firebaseConfig = { 
+            databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    // HIỂN THỊ NGÀY/THÁNG/NĂM ĐỊNH DẠNG CHỮ LỚN
-    function updateDate() {
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        document.getElementById('dateDisplay').innerText = `${day}/${month}/${year}`;
-    }
-    updateDate(); // Chạy hiển thị ngay khi tải trang
+        // 2. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
+        const colors = ["#10b981", "#3b82f6", "#ef4444", "#10b981", "#3b82f6", "#475569"];
+        const numSectors = gifts.length;
+        const arc = 2 * Math.PI / numSectors;
 
-    // 2. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
-    const canvas = document.getElementById('wheel');
-    const ctx = canvas.getContext('2d');
-    const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
-    const colors = ["#10b981", "#3b82f6", "#ef4444", "#10b981", "#3b82f6", "#475569"];
-    const numSectors = gifts.length;
-    const arc = 2 * Math.PI / numSectors;
-
-    function drawWheel() {
-        for (let i = 0; i < numSectors; i++) {
-            let angle = i * arc;
-            ctx.fillStyle = colors[i];
-            ctx.beginPath();
-            ctx.arc(150, 150, 150, angle, angle + arc);
-            ctx.lineTo(150, 150);
-            ctx.fill();
-            
-            ctx.save();
-            ctx.translate(150, 150);
-            ctx.rotate(angle + arc / 2);
-            ctx.fillStyle = "white";
-            ctx.font = "bold 12px sans-serif";
-            ctx.textAlign = "right";
-            ctx.fillText(gifts[i], 140, 5);
-            ctx.restore();
-        }
-    }
-    drawWheel();
-
-    // 3. XỬ LÝ QUAY TÍT TUYỆT ĐỐI VÀ LẮC LƯ 2 LẦN KỊCH TÍNH (24 GIÂY)
-    let isSpinning = false;
-    let animationId = null;
-    let currentAngle = 0; // Biến lưu góc xoay lũy tiến, không reset về 0 để tránh giật hình
-    
-    const spinBtn = document.getElementById('spinBtn');
-    const subText = document.getElementById('subText');
-    const resultText = document.getElementById('resultText');
-    
-    spinBtn.addEventListener('click', () => {
-        if (isSpinning) return;
-        isSpinning = true;
-        
-        subText.style.display = 'none';
-        resultText.style.display = 'none';
-        
-        if (animationId) cancelAnimationFrame(animationId);
-        
-        const randomShift = Math.floor(Math.random() * 360); 
-        const totalDuration = 24000; // Tổng thời gian chạy mới: 24 giây (24000ms)
-        let startTime = null; // Reset sạch mốc thời gian về null cho lượt quay mới
-
-        function animateWheel(timestamp) {
-            if (!startTime) startTime = timestamp;
-            const elapsed = timestamp - startTime;
-
-            if (elapsed < totalDuration) {
-                let currentSpeed = 0;
-
-                // GIAI ĐOẠN 1: 10 giây đầu (0s - 10s) -> Quay tít tốc độ cao ổn định ở mọi lượt quay
-                if (elapsed <= 10000) {
-                    currentSpeed = 35; // Vận tốc góc lớn giúp vòng quay đạt độ tít cực đại giống lượt một
-                }
-                // GIAI ĐOẠN 2: 10 giây tiếp theo (10s - 20s) -> Giảm tốc độ mượt mà chậm dần
-                else if (elapsed <= 20000) {
-                    let t = (elapsed - 10000) / 10000;
-                    currentSpeed = 35 * (1 - t); // Vận tốc hạ dần từ 35 về 0
-                }
-                // GIAI ĐOẠN 3: 4 giây cuối (20s - 24s) -> Lắc lư ngược xuôi đúng 2 lần tại vạch đích
-                else {
-                    let t = (elapsed - 20000) / 4000;
-                    // Đồng bộ góc dừng dự kiến tại chu kỳ vòng tròn tiếp theo
-                    let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
-                    // Hàm Math.sin với chu kỳ t * Math.PI * 4 tạo ra đúng 2 lần đổi chiều lắc lư (xuôi-ngược)
-                    let shake = Math.sin(t * Math.PI * 4) * (1 - t) * 25; 
-                    currentAngle = targetAngle + shake;
-                }
-
-                // Chỉ thực hiện cộng dồn góc khi đang ở giai đoạn quay và giảm tốc
-                if (elapsed <= 20000) {
-                    currentAngle += currentSpeed;
-                }
-
-                // Thực thi xoay đồ họa Canvas
-                canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
-                animationId = requestAnimationFrame(animateWheel);
-            } else {
-                // KHI KẾT THÚC 24 GIÂY: Khóa góc cố định chính xác ô giải thưởng để chụp ảnh
-                const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
-                canvas.style.transform = `rotate(${finalAngle}deg)`;
-                currentAngle = finalAngle; // Lưu lại tọa độ nền cho lượt bấm kế tiếp
+        function drawWheel() {
+            for (let i = 0; i < numSectors; i++) {
+                let angle = i * arc;
+                ctx.fillStyle = colors[i];
+                ctx.beginPath();
+                ctx.arc(150, 150, 150, angle, angle + arc);
+                ctx.lineTo(150, 150);
+                ctx.fill();
                 
-                const index = Math.floor(((360 - finalAngle + 270) % 360) / (360 / numSectors));
-                const prize = gifts[index];
-
-                // Hiển thị kết quả trúng thưởng rõ ràng
-                resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
-                resultText.style.display = 'block';
-                
-                isSpinning = false; // Giải phóng trạng thái khóa để bấm lượt tiếp theo
+                ctx.save();
+                ctx.translate(150, 150);
+                ctx.rotate(angle + arc / 2);
+                ctx.fillStyle = "white";
+                ctx.font = "bold 12px sans-serif";
+                ctx.textAlign = "right";
+                ctx.fillText(gifts[i], 140, 5);
+                ctx.restore();
             }
         }
+        drawWheel();
 
-        // Đồng bộ dữ liệu đếm lượt lên Firebase
-        const now = new Date();
-        const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-        database.ref('total_spins/' + todayStr).transaction((currentValue) => {
-            return (currentValue || 0) + 1;
+        // 3. XỬ LÝ QUAY TÍT ĐỀU TẤT CẢ CÁC LƯỢT (ĐÃ SỬA LỖI TỐC ĐỘ)
+        let isSpinning = false;
+        let animationId = null;
+        let currentAngle = 0; // Lưu góc xoay liên tục
+        
+        const spinBtn = document.getElementById('spinBtn');
+        const subText = document.getElementById('subText');
+        const resultText = document.getElementById('resultText');
+        
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            
+            // Ẩn văn bản cũ
+            subText.style.display = 'none';
+            resultText.style.display = 'none';
+            
+            // Dừng hoàn toàn luồng hoạt ảnh cũ trước khi khởi chạy lượt mới
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            const randomShift = Math.floor(Math.random() * 360); 
+            const totalDuration = 15000; // Tổng thời gian chạy 15 giây
+            let startTime = null; // Khởi tạo lại bộ đếm thời gian trống cho lượt này
+
+            function animateWheel(timestamp) {
+                // SỬA LỖI CỐT LÕI: Buộc startTime phải lấy mốc thời gian thực của lượt click này
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                if (elapsed < totalDuration) {
+                    let currentSpeed = 0;
+
+                    // GIAI ĐOẠN 1: 10 giây đầu (0s - 10s) -> Ép đạt vận tốc tối đa ngay lập tức
+                    if (elapsed <= 4000) {
+                        currentSpeed = 30; // 30 độ mỗi khung hình, đảm bảo cực tít giống lượt đầu
+                    }
+                    // GIAI ĐOẠN 2: 10 giây tiếp theo (10s - 20s) -> Hạ tốc độ mượt mà
+                    else if (elapsed <= 8000) {
+                        let t = (elapsed - 4000) / 4000;
+                        currentSpeed = 30 * (1 - t * 0.7); 
+                    }
+                    // GIAI ĐOẠN 3: 5 giây tiếp theo (20s - 25s) -> Chạy lừ đừ tạo hồi hộp
+                    else if (elapsed <= 12000) {
+                        let t = (elapsed - 8000) / 4000;
+                        currentSpeed = 9 * (1 - t); 
+                    }
+                    // GIAI ĐOẠN 4: 3 giây cuối (25s - 28s) -> Rung kim lắc ngược tại đích
+                    else {
+                        let t = (elapsed - 12000) / 3000;
+                        let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
+                        let shake = Math.sin(t * Math.PI * 4) * (1 - t) * 15;
+                        currentAngle = targetAngle + shake;
+                    }
+
+                    // Chỉ cộng dồn góc quay khi đang ở 3 giai đoạn đầu
+                    if (elapsed <= 12000) {
+                        currentAngle += currentSpeed;
+                    }
+
+                    // Cập nhật góc xoay vật lý cho Canvas
+                    canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
+                    animationId = requestAnimationFrame(animateWheel);
+                } else {
+                    // KHI DỪNG HẲN: Thiết lập góc đích chuẩn xác để kết toán giải thưởng
+                    const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
+                    canvas.style.transform = `rotate(${finalAngle}deg)`;
+                    currentAngle = finalAngle; // Đồng bộ lại biến góc nền
+                    
+                    const index = Math.floor(((360 - finalAngle + 270) % 360) / (360 / numSectors));
+                    const prize = gifts[index];
+
+                    // Hiện bảng chữ lớn cho khách chụp hình lưu niệm
+                    resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
+                    resultText.style.display = 'block';
+                    
+                    isSpinning = false; // Mở khóa nút bấm cho khách tiếp theo
+                }
+            }
+
+            // Ghi nhận tăng lượt quay đồng bộ lên cơ sở dữ liệu Firebase
+            const now = new Date();
+            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+            database.ref('total_spins/' + todayStr).transaction((currentValue) => {
+                return (currentValue || 0) + 1;
+            });
+
+            // Kích hoạt tiến trình vẽ
+            animationId = requestAnimationFrame(animateWheel);
         });
-
-        // Kích hoạt tiến trình hoạt ảnh mới
-        animationId = requestAnimationFrame(animateWheel);
-    });
-</script>
+    </script>
