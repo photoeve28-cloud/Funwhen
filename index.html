@@ -35,10 +35,10 @@
         }
         drawWheel();
 
-        // 3. XỬ LÝ QUAY TÍT ĐỀU TẤT CẢ CÁC LƯỢT (ĐÃ SỬA LỖI TỐC ĐỘ)
+        // 3. XỬ LÝ QUAY TÍT KHÔNG BỊ CHẬM Ở CÁC LƯỢT TIẾP THEO
         let isSpinning = false;
         let animationId = null;
-        let currentAngle = 0; // Lưu góc xoay liên tục
+        let currentAngle = 0; // Biến giữ góc quay liên tục, không reset về 0 để tránh quay ngược
         
         const spinBtn = document.getElementById('spinBtn');
         const subText = document.getElementById('subText');
@@ -48,80 +48,68 @@
             if (isSpinning) return;
             isSpinning = true;
             
-            // Ẩn văn bản cũ
             subText.style.display = 'none';
             resultText.style.display = 'none';
             
-            // Dừng hoàn toàn luồng hoạt ảnh cũ trước khi khởi chạy lượt mới
             if (animationId) cancelAnimationFrame(animationId);
             
             const randomShift = Math.floor(Math.random() * 360); 
-            const totalDuration = 15000; // Tổng thời gian chạy 15 giây
-            let startTime = null; // Khởi tạo lại bộ đếm thời gian trống cho lượt này
+            let startTime = null;
+            const totalDuration = 15000; // Tổng thời gian quay 15 giây
 
             function animateWheel(timestamp) {
-                // SỬA LỖI CỐT LÕI: Buộc startTime phải lấy mốc thời gian thực của lượt click này
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
 
                 if (elapsed < totalDuration) {
-                    let currentSpeed = 0;
-
-                    // GIAI ĐOẠN 1: 10 giây đầu (0s - 10s) -> Ép đạt vận tốc tối đa ngay lập tức
+                    // GIAI ĐOẠN 1: 4 giây đầu (0s - 4s) -> Ép cộng góc cực lớn để quay tít tối đa
                     if (elapsed <= 4000) {
-                        currentSpeed = 30; // 30 độ mỗi khung hình, đảm bảo cực tít giống lượt đầu
+                        currentAngle += 25; // Mỗi khung hình cộng thêm 25 độ, vòng quay sẽ cực tít
                     }
-                    // GIAI ĐOẠN 2: 10 giây tiếp theo (10s - 20s) -> Hạ tốc độ mượt mà
+                    // GIAI ĐOẠN 2: 4 giây tiếp theo (4s - 8s) -> Giảm tốc độ mượt mà
                     else if (elapsed <= 8000) {
                         let t = (elapsed - 4000) / 4000;
-                        currentSpeed = 30 * (1 - t * 0.7); 
+                        currentAngle += 25 * (1 - t * 0.7); 
                     }
-                    // GIAI ĐOẠN 3: 5 giây tiếp theo (20s - 25s) -> Chạy lừ đừ tạo hồi hộp
+                    // GIAI ĐOẠN 3: 4 giây tiếp theo (8s - 12s) -> Quay lừ đừ chậm rãi sát đích
                     else if (elapsed <= 12000) {
                         let t = (elapsed - 8000) / 4000;
-                        currentSpeed = 9 * (1 - t); 
+                        currentAngle += 7.5 * (1 - t); 
                     }
-                    // GIAI ĐOẠN 4: 3 giây cuối (25s - 28s) -> Rung kim lắc ngược tại đích
+                    // GIAI ĐOẠN 4: 3 giây cuối (12s - 15s) -> Hướng về tâm giải thưởng và tạo độ rung lắc kim
                     else {
                         let t = (elapsed - 12000) / 3000;
+                        // Tiến dần về góc đích ngẫu nhiên
                         let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
                         let shake = Math.sin(t * Math.PI * 4) * (1 - t) * 15;
                         currentAngle = targetAngle + shake;
                     }
 
-                    // Chỉ cộng dồn góc quay khi đang ở 3 giai đoạn đầu
-                    if (elapsed <= 12000) {
-                        currentAngle += currentSpeed;
-                    }
-
-                    // Cập nhật góc xoay vật lý cho Canvas
                     canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
                     animationId = requestAnimationFrame(animateWheel);
                 } else {
-                    // KHI DỪNG HẲN: Thiết lập góc đích chuẩn xác để kết toán giải thưởng
+                    // KHI DỪNG HẲN: Khóa chặt góc mục tiêu để khách chụp ảnh lấy thưởng
                     const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
                     canvas.style.transform = `rotate(${finalAngle}deg)`;
-                    currentAngle = finalAngle; // Đồng bộ lại biến góc nền
+                    currentAngle = finalAngle; // Lưu lại tọa độ để lượt sau chạy tiếp xuôi chiều
                     
                     const index = Math.floor(((360 - finalAngle + 270) % 360) / (360 / numSectors));
                     const prize = gifts[index];
 
-                    // Hiện bảng chữ lớn cho khách chụp hình lưu niệm
                     resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
                     resultText.style.display = 'block';
                     
-                    isSpinning = false; // Mở khóa nút bấm cho khách tiếp theo
+                    isSpinning = false;
                 }
             }
 
-            // Ghi nhận tăng lượt quay đồng bộ lên cơ sở dữ liệu Firebase
+            // Đồng bộ tăng lượt đếm lên Firebase
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
             database.ref('total_spins/' + todayStr).transaction((currentValue) => {
                 return (currentValue || 0) + 1;
             });
 
-            // Kích hoạt tiến trình vẽ
             animationId = requestAnimationFrame(animateWheel);
         });
     </script>
