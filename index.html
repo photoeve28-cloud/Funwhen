@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- KHỐI MÃ CHỐNG CACHE: Ép trình duyệt luôn tải bản mới nhất -->
+    <!-- Ép trình duyệt luôn tải bản mới nhất, chống lưu Cache -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
-    <title>Vòng Quay Trúng Thưởng - PHOTO EVE</title>
+    <title>PHOTO EVE - Vòng Quay Trúng Thưởng</title>
     
     <!-- SDK Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -17,22 +17,46 @@
 
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f8fafc;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1e293b;
         }
+
+        /* KHỐI THƯƠNG HIỆU PHOTO EVE */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .brand-title {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #0f172a;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .brand-subtitle {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* KHỐI VÒNG QUAY BẰNG CANVAS */
         .wheel-container {
             position: relative;
-            margin-bottom: 20px;
+            margin: 10px 0 20px 0;
         }
         #wheel {
             border-radius: 50%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+            border: 4px solid #ffffff;
         }
         .pointer {
             position: absolute;
@@ -41,74 +65,146 @@
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid #ef4444;
+            border-left: 16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top: 32px solid #ef4444;
             z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
+
+        /* NÚT BẤM QUAY */
         button {
-            padding: 12px 36px;
-            font-size: 18px;
+            padding: 14px 42px;
+            font-size: 20px;
             font-weight: bold;
             color: white;
-            background-color: #2563eb;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             border: none;
-            border-radius: 8px;
+            border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.5);
         }
         button:active {
-            transform: scale(0.98);
+            transform: translateY(1px);
         }
+
+        /* KẾT QUẢ VÀ LƯỢT QUAY */
         #resultText {
             margin-top: 15px;
             font-size: 22px;
             font-weight: bold;
             color: #059669;
             display: none;
-        }
-        #dateDisplay {
-            font-size: 28px;
-            font-weight: bold;
             text-align: center;
+        }
+
+        /* BẢNG THÔNG TIN THỜI GIAN VÀ THỨ TỰ LƯỢT QUAY */
+        .info-panel {
             margin-top: 20px;
-            color: #1e293b;
+            padding: 12px 24px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .spin-count {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 6px;
+        }
+        .time-display {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
 
-    <div class="wheel-container">
-        <div class="pointer"></div>
-        <canvas id="wheel" width="300" height="300"></canvas>
+    <!-- 1. HEADER THƯƠNG HIỆU -->
+    <div class="brand-header">
+        <h1 class="brand-title">PHOTO EVE</h1>
+        <div class="brand-subtitle">VÒNG QUAY MAY MẮN</div>
     </div>
 
+    <!-- 2. VÒNG QUAY CANVAS -->
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="320" height="320"></canvas>
+    </div>
+
+    <!-- 3. NÚT BẤM VÀ KẾT QUẢ -->
     <button id="spinBtn">QUAY</button>
-    <div id="subText" style="margin-top: 10px; color: #64748b;">Bấm nút để quay thử vận may!</div>
+    <div id="subText" style="margin-top: 10px; color: #64748b; font-size: 14px;">Bấm nút để thử vận may ngay!</div>
     <div id="resultText"></div>
     
-    <!-- Hiển thị ngày/tháng/năm chữ to phía dưới vòng quay -->
-    <div id="dateDisplay"></div>
+    <!-- 4. THÔNG TIN LƯỢT QUAY VÀ THỜI GIAN THỰC UTC+7 -->
+    <div class="info-panel">
+        <div class="spin-count" id="spinCountDisplay">Lượt quay thứ: #--</div>
+        <div class="time-display" id="clockDisplay">00:00:00 - 00/00/0000</div>
+    </div>
 
     <script>
-        // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
+        // CẤU HÌNH FIREBASE REALTIME DATABASE
         const firebaseConfig = { 
             databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
         };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 2. HIỂN THỊ NGÀY THÁNG NĂM THEO THỜI GIAN THỰC
-        function updateDate() {
+        // CẬP NHẬT THỜI GIAN THỰC MÚI GIỜ HÀ NỘI (UTC+7) VÀO KHỐI HIỂN THỊ
+        function updateRealTimeClock() {
             const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            document.getElementById('dateDisplay').innerText = `${day}/${month}/${year}`;
+            // Lấy thời gian chuẩn theo múi giờ Asia/Ho_Chi_Minh (UTC+7)
+            const options = {
+                timeZone: 'Asia/Ho_Chi_Minh',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour12: false
+            };
+            
+            const formatter = new Intl.DateTimeFormat('vi-VN', options);
+            const parts = formatter.formatToParts(now);
+            
+            let timeObj = {};
+            parts.forEach(p => timeObj[p.type] = p.value);
+            
+            const timeString = `${timeObj.hour}:${timeObj.minute}:${timeObj.second} - ${timeObj.day}/${timeObj.month}/${timeObj.year}`;
+            document.getElementById('clockDisplay').innerText = timeString;
         }
-        updateDate();
+        setInterval(updateRealTimeClock, 1000);
+        updateRealTimeClock();
 
-        // 3. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
+        // ĐỒNG BỘ THỨ TỰ LƯỢT QUAY TỪ FIREBASE
+        function getTodayKey() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        const todayStr = getTodayKey();
+        const spinRef = database.ref('total_spins/' + todayStr);
+
+        // Lắng nghe sự thay đổi lượt quay theo thời gian thực
+        spinRef.on('value', (snapshot) => {
+            const count = snapshot.val() || 0;
+            document.getElementById('spinCountDisplay').innerText = `Lượt quay thứ: #${count + 1}`;
+        });
+
+        // VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
@@ -121,23 +217,23 @@
                 let angle = i * arc;
                 ctx.fillStyle = colors[i];
                 ctx.beginPath();
-                ctx.arc(150, 150, 150, angle, angle + arc);
-                ctx.lineTo(150, 150);
+                ctx.arc(160, 160, 160, angle, angle + arc);
+                ctx.lineTo(160, 160);
                 ctx.fill();
                 
                 ctx.save();
-                ctx.translate(150, 150);
+                ctx.translate(160, 160);
                 ctx.rotate(angle + arc / 2);
                 ctx.fillStyle = "white";
-                ctx.font = "bold 12px sans-serif";
+                ctx.font = "bold 13px sans-serif";
                 ctx.textAlign = "right";
-                ctx.fillText(gifts[i], 140, 5);
+                ctx.fillText(gifts[i], 150, 5);
                 ctx.restore();
             }
         }
         drawWheel();
 
-        // 4. KỊCH BẢN QUAY 24 GIÂY: QUAY TÍT -> CHẬM DẦN -> LẮC LƯ 2 LẦN
+        // LOGIC QUAY 24 GIÂY VÀ ĐẦY ĐỦ QUÁN TÍNH
         let isSpinning = false;
         let animationId = null;
         let currentAngle = 0;
@@ -156,7 +252,7 @@
             if (animationId) cancelAnimationFrame(animationId);
             
             const randomShift = Math.floor(Math.random() * 360); 
-            const totalDuration = 24000; // Tổng thời gian 24 giây
+            const totalDuration = 24000; // 24 giây
             let startTime = null;
 
             function animateWheel(timestamp) {
@@ -166,16 +262,16 @@
                 if (elapsed < totalDuration) {
                     let currentSpeed = 0;
 
-                    // 10 GIÂY ĐẦU: Quay tít tốc độ cao ổn định ở mọi lượt quay
+                    // 10s ĐẦU: Bứt tốc cực tít ngay từ giây đầu
                     if (elapsed <= 10000) {
                         currentSpeed = 35; 
                     }
-                    // 10 GIÂY TIẾP THEO: Giảm tốc độ mượt mà
+                    // 10s TIẾP: Giảm tốc độ chậm dần
                     else if (elapsed <= 20000) {
                         let t = (elapsed - 10000) / 10000;
                         currentSpeed = 35 * (1 - t); 
                     }
-                    // 4 GIÂY CUỐI: Lắc lư ngược xuôi 2 lần trước khi dừng
+                    // 4s CUỐI: Lắc lư 2 lần kịch tính tại đích
                     else {
                         let t = (elapsed - 20000) / 4000;
                         let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
@@ -190,7 +286,7 @@
                     canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
                     animationId = requestAnimationFrame(animateWheel);
                 } else {
-                    // KHI DỪNG HẲN: Khóa vị trí và hiển thị kết quả
+                    // DỪNG HẲN VÀ CẬP NHẬT KẾT QUẢ
                     const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
                     canvas.style.transform = `rotate(${finalAngle}deg)`;
                     currentAngle = finalAngle;
@@ -205,10 +301,8 @@
                 }
             }
 
-            // ĐỒNG BỘ CƠ SỞ DỮ LIỆU FIREBASE
-            const now = new Date();
-            const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-            database.ref('total_spins/' + todayStr).transaction((currentValue) => {
+            // ĐẦU ĐỒNG BỘ TĂNG LƯỢT QUAY TRÊN FIREBASE
+            spinRef.transaction((currentValue) => {
                 return (currentValue || 0) + 1;
             });
 
