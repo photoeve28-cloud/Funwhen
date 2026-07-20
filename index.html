@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- KHỐI CHỐNG LƯU CACHE TẠI TRÌNH DUYỆT -->
+    <!-- CHỐNG TRÌNH DUYỆT LƯU CACHE CŨ -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -28,13 +28,13 @@
             color: #f8fafc;
         }
 
-        /* 1. KHỐI THƯƠNG HIỆU PHOTO EVE (TĂNG CỠ CHỮ TO HƠN) */
+        /* 1. THƯƠNG HIỆU PHOTO EVE CỠ CHỮ TO SANG TRỌNG */
         .brand-header {
             text-align: center;
             margin-bottom: 20px;
         }
         .brand-title {
-            font-size: 46px; /* Tăng từ 36px lên 46px */
+            font-size: 46px;
             font-weight: 900;
             letter-spacing: 5px;
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
@@ -45,7 +45,7 @@
             filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.9));
         }
         .brand-subtitle {
-            font-size: 18px; /* Tăng từ 14px lên 18px */
+            font-size: 18px;
             letter-spacing: 4px;
             color: #d4af37;
             margin-top: 8px;
@@ -55,7 +55,7 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
-        /* 2. VÒNG QUAY KHUNG VÀNG SANG TRỌNG */
+        /* 2. KHUNG VÒNG QUAY TÂN CỔ ĐIỂN */
         .wheel-container {
             position: relative;
             margin: 10px 0 20px 0;
@@ -82,7 +82,7 @@
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.7));
         }
 
-        /* 3. NÚT BẤM QUAY PHONG CÁCH TÂN CỔ ĐIỂN */
+        /* 3. NÚT QUAY */
         button {
             padding: 14px 46px;
             font-size: 20px;
@@ -104,12 +104,12 @@
             transform: translateY(1px);
         }
 
-        /* 4. DÒNG KẾT QUẢ HIỂN THỊ MÀU ĐỎ NỔI BẬT */
+        /* 4. CHỮ TRÚNG GIẢI MÀU ĐỎ NỔI BẬT */
         #resultText {
             margin-top: 15px;
             font-size: 24px;
             font-weight: bold;
-            color: #ff4d4d; /* Đổi sang màu Đỏ nổi bật */
+            color: #ff4d4d;
             display: none;
             text-align: center;
             text-shadow: 0 2px 8px rgba(255, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.9);
@@ -140,7 +140,6 @@
 </head>
 <body>
 
-    <!-- THƯƠNG HIỆU CÓ CỠ CHỮ LỚN HƠN -->
     <div class="brand-header">
         <h1 class="brand-title">PHOTO EVE</h1>
         <div class="brand-subtitle">Vòng Quay May Mắn</div>
@@ -161,7 +160,33 @@
     </div>
 
     <script>
-        // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
+        // --- 1. HÀM QUẢN LÝ BỘ ĐẾM BỀN VỮNG TRÊN TRÌNH DUYỆT ---
+        function getTodayKey() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `PHOTOEVE_SPINS_${year}-${month}-${day}`;
+        }
+
+        // Đọc số lượt đã QUAY HOÀN THÀNH trong ngày từ LocalStorage
+        function getCompletedSpinsCount() {
+            const key = getTodayKey();
+            const saved = localStorage.getItem(key);
+            return saved ? parseInt(saved, 10) : 0;
+        }
+
+        // Cập nhật giao diện: Lượt sắp quay sẽ bằng (Số lượt đã hoàn thành + 1)
+        function renderSpinCounter() {
+            const completedSpins = getCompletedSpinsCount();
+            const nextSpinNumber = completedSpins + 1;
+            document.getElementById('spinCountDisplay').innerText = `Lượt quay trong ngày: #${nextSpinNumber}`;
+        }
+
+        // Gọi hiển thị ngay khi mở trang
+        renderSpinCounter();
+
+        // --- 2. CẤU HÌNH FIREBASE (ĐỒNG BỘ DỰ PHÒNG) ---
         const firebaseConfig = { 
             databaseURL: "https://photoeve-cloud-default-rtdb.firebaseio.com/" 
         };
@@ -169,8 +194,9 @@
             firebase.initializeApp(firebaseConfig);
         }
         const database = firebase.database();
+        const spinRef = database.ref('daily_spins/' + getTodayKey());
 
-        // 2. TẠO ÂM THANH BẰNG WEB AUDIO API (HỒI HỘP & VUI NHỘN)
+        // --- 3. ÂM THANH (WEB AUDIO API) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -197,7 +223,7 @@
             if (!audioCtx) audioCtx = new AudioContext();
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            const notes = [523.25, 659.25, 783.99, 1046.50]; // Đồ - Mi - Sol - Đố
+            const notes = [523.25, 659.25, 783.99, 1046.50];
             notes.forEach((freq, index) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -215,47 +241,7 @@
             });
         }
 
-        // 3. KHÓA NGÀY HÀ NỘI (YYYY-MM-DD)
-        function getVietnamDateKey() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        const todayKey = getVietnamDateKey();
-        const localStorageKey = 'PHOTOEVE_SPINS_' + todayKey;
-
-        // 4. BỘ ĐẾM LOCALSTORAGE (SỬA LỖI ĐẾM LẠI TỪ ĐẦU)
-        function getLocalSpins() {
-            const saved = localStorage.getItem(localStorageKey);
-            return saved ? parseInt(saved, 10) : 0;
-        }
-
-        function saveLocalSpins(count) {
-            localStorage.setItem(localStorageKey, count);
-        }
-
-        function updateSpinDisplay(count) {
-            document.getElementById('spinCountDisplay').innerText = `Lượt quay trong ngày: #${count + 1}`;
-        }
-
-        // Khởi tạo hiển thị lần đầu
-        let currentTotalSpins = getLocalSpins();
-        updateSpinDisplay(currentTotalSpins);
-
-        // Đồng bộ dữ liệu Realtime từ Firebase (nếu có kết nối)
-        const spinRef = database.ref('daily_spins/' + todayKey);
-        spinRef.on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                currentTotalSpins = snapshot.val();
-                saveLocalSpins(currentTotalSpins);
-                updateSpinDisplay(currentTotalSpins);
-            }
-        });
-
-        // 5. ĐỒNG HỒ THỜI GIAN THỰC
+        // --- 4. ĐỒNG HỒ THỜI GIAN THỰC ---
         function updateClock() {
             const now = new Date();
             const options = {
@@ -273,7 +259,7 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 6. VẼ VÒNG QUAY NEO-CLASSICAL
+        // --- 5. VẼ VÒNG QUAY NEO-CLASSICAL ---
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
@@ -306,7 +292,7 @@
         }
         drawWheel();
 
-        // 7. XỬ LÝ SỰ KIỆN QUAY VÀ CỘNG DỒN CHÍNH XÁC
+        // --- 6. XỬ LÝ SỰ KIỆN NÚT QUAY & CỘNG DỒN NỐI TIẾP ---
         let isSpinning = false;
         let animationId = null;
         let currentAngle = 0;
@@ -325,13 +311,17 @@
             
             if (animationId) cancelAnimationFrame(animationId);
             
-            // XỬ LÝ LỖI ĐẾM LƯỢT: ĐỌC LẠI BỘ NHỚ TRƯỚC KHI TĂNG
-            let existingSpins = getLocalSpins();
-            currentTotalSpins = existingSpins + 1;
-            saveLocalSpins(currentTotalSpins);
-            updateSpinDisplay(currentTotalSpins);
+            // BƯỚC QUAN TRỌNG: Lấy số lượt đã quay hiện tại, cộng thêm 1 và lưu NGAY LẬP TỨC
+            let currentCompleted = getCompletedSpinsCount();
+            let newCompleted = currentCompleted + 1;
+            
+            // Lưu trực tiếp vào bộ nhớ máy
+            localStorage.setItem(getTodayKey(), newCompleted);
+            
+            // Cập nhật giao diện hiển thị lượt tiếp theo
+            renderSpinCounter();
 
-            // Đồng bộ lên Firebase Cloud
+            // Lưu dự phòng lên Firebase
             spinRef.transaction((val) => (val || 0) + 1);
 
             const randomShift = Math.floor(Math.random() * 360); 
@@ -361,7 +351,7 @@
                         currentAngle += currentSpeed;
                     }
 
-                    // Phát âm thanh tích tắc khi đi qua từng ô quà
+                    // Phát tiếng tạch tạch khi đi qua từng ô
                     const currentSector = Math.floor(((360 - (currentAngle % 360) + 270) % 360) / (360 / numSectors));
                     if (currentSector !== lastSectorIndex) {
                         playTickSound();
@@ -378,7 +368,7 @@
                     const index = Math.floor(((360 - finalAngle + 270) % 360) / (360 / numSectors));
                     const prize = gifts[index];
 
-                    // Phát âm thanh chiến thắng khi dừng
+                    // Phát nhạc chiến thắng
                     playWinSound();
 
                     resultText.innerHTML = prize === "May Mắn Lần Sau" ? `🎉 Chúc bạn ${prize}!` : `🎁 Trúng giải: ${prize}!`;
