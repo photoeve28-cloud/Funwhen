@@ -1,4 +1,96 @@
-<script>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- KHỐI MÃ CHỐNG CACHE: Ép trình duyệt luôn tải bản mới nhất -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>Vòng Quay Trúng Thưởng - PHOTO EVE</title>
+    
+    <!-- SDK Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f8fafc;
+        }
+        .wheel-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        #wheel {
+            border-radius: 50%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ef4444;
+            z-index: 10;
+        }
+        button {
+            padding: 12px 36px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background-color: #2563eb;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #resultText {
+            margin-top: 15px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #059669;
+            display: none;
+        }
+        #dateDisplay {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="300" height="300"></canvas>
+    </div>
+
+    <button id="spinBtn">QUAY</button>
+    <div id="subText" style="margin-top: 10px; color: #64748b;">Bấm nút để quay thử vận may!</div>
+    <div id="resultText"></div>
+    
+    <!-- Hiển thị ngày/tháng/năm chữ to phía dưới vòng quay -->
+    <div id="dateDisplay"></div>
+
+    <script>
         // 1. CẤU HÌNH KẾT NỐI DATABASE FIREBASE
         const firebaseConfig = { 
             databaseURL: "https://photoeve-xxxx-default-rtdb.firebaseio.com/" 
@@ -6,7 +98,17 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 2. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
+        // 2. HIỂN THỊ NGÀY THÁNG NĂM THEO THỜI GIAN THỰC
+        function updateDate() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            document.getElementById('dateDisplay').innerText = `${day}/${month}/${year}`;
+        }
+        updateDate();
+
+        // 3. VẼ ĐỒ HỌA VÒNG QUAY BẰNG CANVAS
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const gifts = ["Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "Giải Nhất: Túi Tote", "Giải Ba: Móc Khóa", "Giải Nhì: Set Sticker", "May Mắn Lần Sau"];
@@ -35,10 +137,10 @@
         }
         drawWheel();
 
-        // 3. XỬ LÝ QUAY TÍT KHÔNG BỊ CHẬM Ở CÁC LƯỢT TIẾP THEO
+        // 4. KỊCH BẢN QUAY 24 GIÂY: QUAY TÍT -> CHẬM DẦN -> LẮC LƯ 2 LẦN
         let isSpinning = false;
         let animationId = null;
-        let currentAngle = 0; // Biến giữ góc quay liên tục, không reset về 0 để tránh quay ngược
+        let currentAngle = 0;
         
         const spinBtn = document.getElementById('spinBtn');
         const subText = document.getElementById('subText');
@@ -54,44 +156,44 @@
             if (animationId) cancelAnimationFrame(animationId);
             
             const randomShift = Math.floor(Math.random() * 360); 
+            const totalDuration = 24000; // Tổng thời gian 24 giây
             let startTime = null;
-            const totalDuration = 15000; // Tổng thời gian quay 15 giây
 
             function animateWheel(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
 
                 if (elapsed < totalDuration) {
-                    // GIAI ĐOẠN 1: 4 giây đầu (0s - 4s) -> Ép cộng góc cực lớn để quay tít tối đa
-                    if (elapsed <= 4000) {
-                        currentAngle += 25; // Mỗi khung hình cộng thêm 25 độ, vòng quay sẽ cực tít
+                    let currentSpeed = 0;
+
+                    // 10 GIÂY ĐẦU: Quay tít tốc độ cao ổn định ở mọi lượt quay
+                    if (elapsed <= 10000) {
+                        currentSpeed = 35; 
                     }
-                    // GIAI ĐOẠN 2: 4 giây tiếp theo (4s - 8s) -> Giảm tốc độ mượt mà
-                    else if (elapsed <= 8000) {
-                        let t = (elapsed - 4000) / 4000;
-                        currentAngle += 25 * (1 - t * 0.7); 
+                    // 10 GIÂY TIẾP THEO: Giảm tốc độ mượt mà
+                    else if (elapsed <= 20000) {
+                        let t = (elapsed - 10000) / 10000;
+                        currentSpeed = 35 * (1 - t); 
                     }
-                    // GIAI ĐOẠN 3: 4 giây tiếp theo (8s - 12s) -> Quay lừ đừ chậm rãi sát đích
-                    else if (elapsed <= 12000) {
-                        let t = (elapsed - 8000) / 4000;
-                        currentAngle += 7.5 * (1 - t); 
-                    }
-                    // GIAI ĐOẠN 4: 3 giây cuối (12s - 15s) -> Hướng về tâm giải thưởng và tạo độ rung lắc kim
+                    // 4 GIÂY CUỐI: Lắc lư ngược xuôi 2 lần trước khi dừng
                     else {
-                        let t = (elapsed - 12000) / 3000;
-                        // Tiến dần về góc đích ngẫu nhiên
+                        let t = (elapsed - 20000) / 4000;
                         let targetAngle = Math.ceil(currentAngle / 360) * 360 + randomShift;
-                        let shake = Math.sin(t * Math.PI * 4) * (1 - t) * 15;
+                        let shake = Math.sin(t * Math.PI * 4) * (1 - t) * 25; 
                         currentAngle = targetAngle + shake;
+                    }
+
+                    if (elapsed <= 20000) {
+                        currentAngle += currentSpeed;
                     }
 
                     canvas.style.transform = `rotate(${currentAngle % 360}deg)`;
                     animationId = requestAnimationFrame(animateWheel);
                 } else {
-                    // KHI DỪNG HẲN: Khóa chặt góc mục tiêu để khách chụp ảnh lấy thưởng
+                    // KHI DỪNG HẲN: Khóa vị trí và hiển thị kết quả
                     const finalAngle = (Math.ceil(currentAngle / 360) * 360 + randomShift) % 360;
                     canvas.style.transform = `rotate(${finalAngle}deg)`;
-                    currentAngle = finalAngle; // Lưu lại tọa độ để lượt sau chạy tiếp xuôi chiều
+                    currentAngle = finalAngle;
                     
                     const index = Math.floor(((360 - finalAngle + 270) % 360) / (360 / numSectors));
                     const prize = gifts[index];
@@ -103,7 +205,7 @@
                 }
             }
 
-            // Đồng bộ tăng lượt đếm lên Firebase
+            // ĐỒNG BỘ CƠ SỞ DỮ LIỆU FIREBASE
             const now = new Date();
             const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
             database.ref('total_spins/' + todayStr).transaction((currentValue) => {
@@ -113,3 +215,5 @@
             animationId = requestAnimationFrame(animateWheel);
         });
     </script>
+</body>
+</html>
