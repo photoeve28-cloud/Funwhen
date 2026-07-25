@@ -429,60 +429,62 @@
                     }
                     resultText.style.display = 'block';
                     isSpinning = false;
-                }
-            }
+               }
+    }
 
-            animationId = requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
+});
+</script>
+
+<!-- 1. KHU VỰC NÚT BẤM GIAO DIỆN (HTML) -->
+<div style="text-align: center; margin-top: 15px;">
+    <button id="recordBtn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: 1px solid #fca5a5; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;">
+        🎥 QUAY VÀ TẢI VIDEO QUẢNG CÁO
+    </button>
+</div>
+
+<!-- 2. KHU VỰC XỬ LÝ QUAY VIDEO (JAVASCRIPT) -->
+<script>
+    let mediaRecorder;
+    let recordedChunks = [];
+    const recordBtn = document.getElementById('recordBtn');
+
+    recordBtn.addEventListener('click', () => {
+        const canvasElement = document.getElementById('wheel');
+        
+        // Lấy luồng hình ảnh từ Canvas (30 khung hình/giây)
+        const canvasStream = canvasElement.captureStream(30);
+
+        recordedChunks = [];
+        mediaRecorder = new MediaRecorder(canvasStream, {
+            mimeType: 'video/webm;codecs=vp9'
         });
-    </script>
-    <!-- NÚT BẤM VÀ MÃ QUAY VIDEO QUẢNG CÁO -->
-    <div style="text-align: center; margin-top: 15px;">
-        <button id="recordBtn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: 1px solid #fca5a5;">
-            🎥 QUAY VÀ TẢI VIDEO QUẢNG CÁO
-        </button>
-    </div>
 
-    <script>
-        let mediaRecorder;
-        let recordedChunks = [];
-        const recordBtn = document.getElementById('recordBtn');
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) recordedChunks.push(event.data);
+        };
 
-        recordBtn.addEventListener('click', () => {
-            const canvasElement = document.getElementById('wheel');
-            
-            // Lấy hình ảnh từ Canvas (30 khung hình/giây)
-            const canvasStream = canvasElement.captureStream(30);
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'PHOTO_EVE_VongQuay_QuangCao.webm';
+            a.click();
+            URL.revokeObjectURL(url);
+            alert('Đã tải xong video quảng cáo vòng quay!');
+        };
 
-            recordedChunks = [];
-            mediaRecorder = new MediaRecorder(canvasStream, {
-                mimeType: 'video/webm;codecs=vp9'
-            });
+        mediaRecorder.start();
+        
+        // Tự động kích hoạt nút quay
+        document.getElementById('spinBtn').click();
 
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) recordedChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'PHOTO_EVE_VongQuay_QuangCao.webm';
-                a.click();
-                URL.revokeObjectURL(url);
-                alert('Đã tải xong video quảng cáo vòng quay!');
-            };
-
-            mediaRecorder.start();
-            
-            // Kích hoạt nút quay
-            document.getElementById('spinBtn').click();
-
-            // Tự động dừng sau 13 giây
-            setTimeout(() => {
-                if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            }, 13000);
-        });
+        // Tự động dừng ghi sau 13 giây
+        setTimeout(() => {
+            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        }, 13000);
+    });
     </script>
 </body>
 </html>
