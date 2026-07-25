@@ -12,8 +12,9 @@
             padding: 0;
             font-family: Arial, sans-serif;
         }
+
         body {
-            background-color: #0d1b2a;
+            background-color: #0b1325;
             color: #ffffff;
             display: flex;
             flex-direction: column;
@@ -22,111 +23,196 @@
             min-height: 100vh;
             padding: 20px;
         }
-        h1 {
-            color: #fcf6ba;
-            margin-bottom: 20px;
+
+        .header-title {
             text-align: center;
+            margin-bottom: 20px;
         }
+
+        .header-title h1 {
+            color: #fcf6ba;
+            font-size: 28px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(252, 246, 186, 0.3);
+        }
+
+        .header-title p {
+            color: #d1d5db;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        /* KHU VỰC VÒNG QUAY */
         .wheel-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 320px;
+            height: 320px;
             margin-bottom: 20px;
         }
+
         canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            box-shadow: 0 0 20px rgba(252, 246, 186, 0.4);
+            box-shadow: 0 0 25px rgba(252, 246, 186, 0.3);
         }
+
         .pointer {
             position: absolute;
-            top: -10px;
+            top: -12px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid #ef4444;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-top: 24px solid #ef4444;
             z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
+
+        /* KHU VỰC NÚT BẤM */
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
             align-items: center;
+            gap: 12px;
             width: 100%;
             max-width: 320px;
         }
+
         button {
             width: 100%;
             padding: 12px 20px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             border-radius: 25px;
             border: none;
             cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
+            transition: all 0.2s ease;
         }
+
         button:active {
-            transform: scale(0.98);
+            transform: scale(0.97);
         }
+
         #spinBtn {
             background: linear-gradient(135deg, #fcf6ba 0%, #bf953f 100%);
-            color: #000;
+            color: #111827;
+            box-shadow: 0 4px 15px rgba(191, 149, 63, 0.4);
         }
+
         #recordBtn {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #fff;
+            color: #ffffff;
             border: 1px solid #fca5a5;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
         }
+
         #installPwaBtn {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #fff;
+            color: #ffffff;
             border: 1px solid #34d399;
             display: none;
         }
+
+        .sub-text {
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+        }
+
+        /* BẢNG THÔNG TIN LƯỢT QUAY */
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(252, 246, 186, 0.2);
+            border-radius: 12px;
+            padding: 12px 20px;
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+            margin-top: 10px;
+        }
+
+        .spin-count {
+            color: #fcf6ba;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .time-display {
+            color: #d1d5db;
+            font-size: 13px;
+        }
+
         #resultText {
             margin-top: 15px;
-            font-size: 18px;
+            font-size: 16px;
             text-align: center;
             font-weight: bold;
             color: #fcf6ba;
-            min-height: 25px;
+            min-height: 24px;
         }
     </style>
 </head>
 <body>
 
-    <h1>PHOTO EVE</h1>
+    <!-- TIÊU ĐỀ -->
+    <div class="header-title">
+        <h1>PHOTO EVE</h1>
+        <p>VÒNG QUAY MAY MẮN</p>
+    </div>
 
     <!-- KHU VỰC VÒNG QUAY -->
     <div class="wheel-container">
         <div class="pointer"></div>
-        <canvas id="wheel" width="300" height="300"></canvas>
+        <canvas id="wheel" width="320" height="320"></canvas>
     </div>
 
-    <!-- KHU VỰC NÚT BẤM ĐIỀU KHIỂN -->
+    <!-- KHU VỰC NÚT ĐIỀU KHIỂN -->
     <div class="controls">
-        <button id="spinBtn">QUAY MAY MẮN</button>
+        <button id="spinBtn">QUAY</button>
+        <p class="sub-text">Bấm nút để thử vận may ngay!</p>
+
+        <!-- BẢNG THÔNG TIN LƯỢT QUAY -->
+        <div class="info-panel">
+            <div class="spin-count" id="spinCountDisplay">Lượt quay trong ngày: #11</div>
+            <div class="time-display" id="clockDisplay">16:55:51 - 25/07/2026</div>
+        </div>
+
+        <!-- NÚT CHỨC NĂNG BỔ SUNG -->
         <button id="recordBtn">🎥 QUAY VÀ TẢI VIDEO QUẢNG CÁO</button>
         <button id="installPwaBtn">📲 CÀI ĐẶT APP PHOTO EVE</button>
     </div>
 
-    <!-- KHU VỰC HIỂN THỊ KẾT QUẢ -->
+    <!-- THÔNG BÁO KẾT QUẢ -->
     <div id="resultText"></div>
 
-    <!-- KỊCH BẢN XỬ LÝ CHÍNH (JAVASCRIPT) -->
+    <!-- KỊCH BẢN XỬ LÝ JAVASCRIPT -->
     <script>
-        // 1. KHỞI TẠO VÒNG QUAY
+        // --- 1. KHỞI TẠO VÒNG QUAY VÀ CÁC PHẦN THƯỞNG ---
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         const spinBtn = document.getElementById('spinBtn');
         const resultText = document.getElementById('resultText');
 
-        const gifts = ["Thủ bông mini", "Móc khóa", "Màn Lần Sau", "Voucher 20k", "Ảnh in free", "Màn Lần Sau"];
-        const colors = ["#1e293b", "#334155", "#0f172a", "#475569", "#1e293b", "#334155"];
+        const gifts = [
+            "Chúc Bạn May Mắn Lần Sau",
+            "Móc Khóa Xinh",
+            "Thu Bông Mini",
+            "Chúc Bạn May Mắn Lần Sau",
+            "VIP PHOTO EVE - Album",
+            "Móc Khóa Xinh",
+            "Thu Bông Mini",
+            "Chúc Bạn May Mắn Lần Sau"
+        ];
+
+        const colors = [
+            "#1d2939", "#344054", "#1d2939", "#344054",
+            "#7a1b1b", "#344054", "#1d2939", "#344054"
+        ];
+
         const numSectors = gifts.length;
         const sectorAngle = (2 * Math.PI) / numSectors;
 
@@ -140,11 +226,16 @@
 
             for (let i = 0; i < numSectors; i++) {
                 const angle = i * sectorAngle;
+                
+                // Vẽ ô hình quạt
                 ctx.beginPath();
                 ctx.fillStyle = colors[i];
                 ctx.moveTo(radius, radius);
-                ctx.arc(radius, radius, radius, angle, angle + sectorAngle);
+                ctx.arc(radius, radius, radius - 5, angle, angle + sectorAngle);
                 ctx.fill();
+                ctx.strokeStyle = "#bf953f";
+                ctx.lineWidth = 2;
+                ctx.stroke();
 
                 // Vẽ chữ phần thưởng
                 ctx.save();
@@ -152,32 +243,42 @@
                 ctx.rotate(angle + sectorAngle / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = "#fcf6ba";
-                ctx.font = "bold 13px Arial";
-                ctx.fillText(gifts[i], radius - 15, 5);
+                ctx.font = "bold 11px Arial";
+                ctx.fillText(gifts[i], radius - 15, 4);
                 ctx.restore();
             }
         }
         drawWheel();
 
-        // 2. THUẬT TOÁN QUAY VÒNG QUAY
-        function spin() {
+        // Cập nhật đồng hồ thời gian thực
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            const dateStr = now.toLocaleDateString('vi-VN');
+            document.getElementById('clockDisplay').innerText = `${timeStr} - ${dateStr}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 2. THUẬT TOÁN QUAY VÒNG QUAY ---
+        function runSpin() {
             if (isSpinning) return;
             isSpinning = true;
             resultText.innerText = "";
 
             const winningIndex = Math.floor(Math.random() * numSectors);
-            const extraRounds = 5; // Số vòng quay tối thiểu
+            const extraRounds = 5;
             const targetAngle = (360 * extraRounds) + (360 - (winningIndex * (360 / numSectors))) - (360 / numSectors / 2);
-            
+
             let startTime = null;
-            const duration = 12000; // Thời gian quay 12 giây
+            const duration = 12000; // 12 giây
 
             function animate(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                
-                // Hiệu ứng quay chậm dần (easeOut)
+
+                // Chuyển động chậm dần (easeOut)
                 const easeOut = 1 - Math.pow(1 - progress, 4);
                 currentRotation = targetAngle * easeOut;
 
@@ -187,29 +288,30 @@
                     requestAnimationFrame(animate);
                 } else {
                     isSpinning = false;
-                    resultText.innerText = gifts[winningIndex] === "Màn Lần Sau" 
-                        ? "🎉 Chúc bạn may mắn lần kế tiếp!" 
-                        : `🎁 Chúc mừng bạn trúng: ${gifts[winningIndex]}!`;
+                    const prize = gifts[winningIndex];
+                    if (prize.includes("Lần Sau")) {
+                        resultText.innerText = "🎉 Chúc bạn may mắn lần kế tiếp!";
+                    } else {
+                        resultText.innerText = `🎁 Chúc mừng bạn trúng: ${prize}!`;
+                    }
                 }
             }
             requestAnimationFrame(animate);
         }
 
-        spinBtn.addEventListener('click', spin);
+        spinBtn.addEventListener('click', runSpin);
 
-        // 3. MÃ QUAY VÀ TẢI VIDEO QUẢNG CÁO
-        let mediaRecorder;
-        let recordedChunks = [];
+        // --- 3. MÃ QUAY VÀ TẢI VIDEO QUẢNG CÁO (MediaRecorder API) ---
         const recordBtn = document.getElementById('recordBtn');
 
         recordBtn.addEventListener('click', () => {
             if (isSpinning) return;
 
-            // Bắt luồng hình ảnh từ Canvas (30 FPS)
+            // Thu luồng hình ảnh 30 FPS từ thẻ Canvas
             const canvasStream = canvas.captureStream(30);
-            recordedChunks = [];
+            let recordedChunks = [];
 
-            mediaRecorder = new MediaRecorder(canvasStream, {
+            const mediaRecorder = new MediaRecorder(canvasStream, {
                 mimeType: 'video/webm;codecs=vp9'
             });
 
@@ -225,26 +327,26 @@
                 a.download = 'PHOTO_EVE_VongQuay_QuangCao.webm';
                 a.click();
                 URL.revokeObjectURL(url);
-                alert('Đã tải xong video quảng cáo vòng quay!');
+                alert('Đã tải xong video quảng cáo!');
             };
 
             mediaRecorder.start();
-            spin(); // Tự động kích hoạt lượt quay
+            runSpin(); // Tự động bắt đầu quay vòng quay
 
-            // Tự động dừng quay sau 13 giây
+            // Dừng quay video sau 13 giây
             setTimeout(() => {
                 if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
             }, 13000);
         });
 
-        // 4. MÃ TỰ ĐỘNG CÀI ĐẶT APP (PWA)
+        // --- 4. MÃ CÀI ĐẶT ỨNG DỤNG (PWA) ---
         let deferredPrompt = null;
         const installBtn = document.getElementById('installPwaBtn');
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.style.display = 'inline-block';
+            installBtn.style.display = 'block';
         });
 
         installBtn.addEventListener('click', async () => {
