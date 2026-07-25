@@ -24,113 +24,111 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background: radial-gradient(circle, #2b2d42 0%, #11131e 100%);
+            /* TÔNG NỀN MỚI: SANG TRỌNG BẮT MẮT VỚI HIỆU ỨNG ÁNH KIM VÀ LỚP PHỦ SÂU */
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
             color: #f8fafc;
         }
 
         .brand-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .brand-title {
-            font-size: 46px;
+            font-size: 44px;
             font-weight: 900;
-            letter-spacing: 5px;
+            letter-spacing: 4px;
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
             text-transform: uppercase;
-            filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.9));
+            filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.8));
         }
         .brand-subtitle {
-            font-size: 18px;
-            letter-spacing: 4px;
-            color: #d4af37;
-            margin-top: 8px;
+            font-size: 16px;
+            letter-spacing: 3px;
+            color: #f3e8ff;
+            margin-top: 6px;
             font-weight: 700;
             text-transform: uppercase;
-            opacity: 0.95;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
+        /* VIỀN MỚI CỰC KỲ NỔI BẬT CHO VÒNG QUAY */
         .wheel-container {
             position: relative;
-            margin: 10px 0 20px 0;
-            padding: 8px;
+            margin: 10px 0 15px 0;
+            padding: 10px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #bf953f, #aa771c);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            background: linear-gradient(135deg, #ffd700, #b8860b, #d4af37);
+            box-shadow: 0 0 35px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(0,0,0,0.5);
         }
         #wheel {
             border-radius: 50%;
             display: block;
         }
+        
+        /* KIM CHỈ VÒNG QUAY ĐƯỢC CĂN CHỈNH TỌA ĐỘ CHÍNH XÁC */
         .pointer {
             position: absolute;
-            top: -12px;
+            top: -14px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 18px solid transparent;
-            border-right: 18px solid transparent;
-            border-top: 34px solid #d4af37;
+            border-left: 16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top: 32px solid #ff3333; /* Đổi màu đỏ nổi bật dễ quan sát */
             z-index: 10;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.7));
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.9));
         }
 
         button {
-            padding: 14px 46px;
-            font-size: 20px;
+            padding: 12px 42px;
+            font-size: 18px;
             font-weight: bold;
             letter-spacing: 2px;
-            color: #11131e;
+            color: #0f172a;
             background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
             border: 2px solid #ffe599;
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
-        }
-        button:active {
-            transform: translateY(1px);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.7);
         }
 
         #resultText {
             margin-top: 15px;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            color: #ff4d4d;
+            color: #38bdf8;
             display: none;
             text-align: center;
-            text-shadow: 0 2px 8px rgba(255, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.9);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
         }
 
         .info-panel {
-            margin-top: 20px;
-            padding: 14px 28px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            margin-top: 15px;
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.4);
             border-radius: 12px;
-            backdrop-filter: blur(5px);
             text-align: center;
         }
         .spin-count {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #fcf6ba;
-            margin-bottom: 6px;
         }
         .time-display {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
-            color: #e2e8f0;
-            letter-spacing: 1px;
+            color: #cbd5e1;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -147,7 +145,7 @@
     </div>
 
     <button id="spinBtn">QUAY</button>
-    <div id="subText" style="margin-top: 10px; color: #94a3b8; font-size: 14px;">Bấm nút để thử vận may ngay!</div>
+    <div id="subText" style="margin-top: 8px; color: #94a3b8; font-size: 13px;">Bấm nút để thử vận may ngay!</div>
     <div id="resultText"></div>
     
     <div class="info-panel">
@@ -156,7 +154,7 @@
     </div>
 
     <script>
-        // --- 1. HÀM TẠO KHÓA THỜI GIAN THEO NGÀY VÀ TUẦN ---
+        // 1. QUẢN LÝ THỜI GIAN & BỘ ĐẾM
         function getTodayKey() {
             const now = new Date();
             return `PHOTOEVE_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -182,13 +180,13 @@
         }
         renderSpinCounter();
 
-        // --- 2. CẤU HÌNH FIREBASE ---
+        // 2. FIREBASE CONFIG
         const firebaseConfig = { databaseURL: "https://photoeve-cloud-default-rtdb.firebaseio.com/" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const spinRef = database.ref('daily_spins/' + getTodayKey());
 
-        // --- 3. ÂM THANH (WEB AUDIO API) ---
+        // 3. ÂM THANH
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -199,13 +197,13 @@
             const gain = audioCtx.createGain();
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.05);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
+            osc.stop(audioCtx.currentTime + 0.04);
         }
 
         function playWinSound() {
@@ -217,17 +215,17 @@
                 const gain = audioCtx.createGain();
                 osc.type = 'sine';
                 osc.frequency.value = freq;
-                let startTime = audioCtx.currentTime + index * 0.12;
-                gain.gain.setValueAtTime(0.3, startTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.4);
+                let startTime = audioCtx.currentTime + index * 0.1;
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start(startTime);
-                osc.stop(startTime + 0.4);
+                osc.stop(startTime + 0.3);
             });
         }
 
-        // --- 4. ĐỒNG HỒ THỜI GIAN THỰC ---
+        // 4. ĐỒNG HỒ
         function updateClock() {
             const now = new Date();
             const options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hour12: false };
@@ -240,27 +238,29 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // --- 5. CẤU HÌNH VÒNG QUAY & MẢNG GIẢI THƯỞNG ---
+        // 5. CẤU HÌNH BÀN QUAY 8 Ô THEO YÊU CẦU CỦA BẠN
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         
-        // Vòng quay chia làm 8 ô cân đối
+        // Cơ cấu 8 ô: 1 VIP, 2 Thú bông, 2 Móc khóa, 3 Chúc may mắn
         const gifts = [
             "VIP PHOTO EVE - Album",        // Ô 0
             "May Mắn - Thú bông mini",     // Ô 1
             "Quà Kỷ Niệm - Móc khóa xinh", // Ô 2
             "Chúc Bạn May Mắn Lần Sau",   // Ô 3
-            "Chúc Bạn May Mắn Lần Sau",   // Ô 4
-            "Chúc Bạn May Mắn Lần Sau",   // Ô 5
+            "May Mắn - Thú bông mini",     // Ô 4
+            "Quà Kỷ Niệm - Móc khóa xinh", // Ô 5
             "Chúc Bạn May Mắn Lần Sau",   // Ô 6
             "Chúc Bạn May Mắn Lần Sau"    // Ô 7
         ];
         
-        const colors = ["#800020", "#1B2A4A", "#2C5E3B", "#34495E", "#2C3E50", "#4A235A", "#1A5276", "#1E8449"];
+        const colors = ["#800020", "#1B2A4A", "#2C5E3B", "#34495E", "#1B2A4A", "#2C5E3B", "#34495E", "#2C3E50"];
         const numSectors = gifts.length;
+        const sectorAngleDeg = 360 / numSectors; // 45 độ mỗi ô
         const arc = 2 * Math.PI / numSectors;
 
         function drawWheel() {
+            ctx.clearRect(0, 0, 340, 340);
             for (let i = 0; i < numSectors; i++) {
                 let angle = i * arc;
                 ctx.fillStyle = colors[i];
@@ -269,15 +269,15 @@
                 ctx.lineTo(170, 170);
                 ctx.fill();
                 
-                ctx.strokeStyle = "rgba(212, 175, 55, 0.4)";
-                ctx.lineWidth = 1;
+                ctx.strokeStyle = "rgba(255, 215, 0, 0.5)";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
 
                 ctx.save();
                 ctx.translate(170, 170);
                 ctx.rotate(angle + arc / 2);
                 ctx.fillStyle = "#FCF6BA"; 
-                ctx.font = "bold 10px serif";
+                ctx.font = "bold 10px sans-serif";
                 ctx.textAlign = "right";
                 ctx.fillText(gifts[i], 160, 4);
                 ctx.restore();
@@ -285,22 +285,20 @@
         }
         drawWheel();
 
-        // --- 6. THUẬT TOÁN XÁC ĐỊNH GIẢI TRÚNG THEO THỜI GIAN & HẠN MỨC ---
+        // 6. THUẬT TOÁN KIỂM TRA ĐIỀU KIỆN TRÚNG THƯỞNG
         function determinePrizeIndex() {
             const now = new Date();
-            const dayOfWeek = now.getDay(); // 0: Chủ nhật, 1: T2, 2: T3, 3: T4, 4: T5, 5: T6, 6: T7
+            const dayOfWeek = now.getDay(); 
             const hour = now.getHours();
             const minute = now.getMinutes();
-            const timeInMinutes = hour * 60 + minute; // Đổi thời gian ra số phút trong ngày
+            const timeInMinutes = hour * 60 + minute;
 
             const weekKey = getWeekKey();
             const todayKey = getTodayKey();
 
-            // Đọc số lượt đã trúng từ localStorage
             const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
             const mayManWonWeek = parseInt(localStorage.getItem(`${weekKey}_MAYMAN`) || '0', 10);
             
-            // Xử lý các khung giờ trong ngày: Sáng (06:00 - 11:59), Chiều (12:00 - 17:59), Tối (18:00 - 23:59)
             let sessionKey = "TONG";
             if (hour >= 6 && hour < 12) sessionKey = "SANG";
             else if (hour >= 12 && hour < 18) sessionKey = "CHIEU";
@@ -308,27 +306,23 @@
 
             const mocKhoaWonSession = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_${sessionKey}`) || '0', 10);
 
-            // A. KIỂM TRA GIẢI NHẤT: VIP PHOTO EVE - Album (Ô 0)
-            // Khung 20h30 (1230p) đến 21h30 (1290p) T6 (5) và CN (0) | Tối đa 2 giải / tuần
+            // A. GIẢI VIP PHOTO EVE - Album (Ô 0)
             if ((dayOfWeek === 5 || dayOfWeek === 0) && (timeInMinutes >= 1230 && timeInMinutes <= 1290)) {
                 if (vipWonWeek < 2) {
                     localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
-                    return 0; // Trúng VIP Album
+                    return 0; 
                 }
             }
 
-            // B. KIỂM TRA GIẢI NHÌ: May Mắn - Thú bông mini (Ô 1)
-            // Khung 20h00 (1200p) đến 22h00 (1320p) T3 (2), T5 (4), T7 (6) | Tối đa 3 giải / tuần
+            // B. GIẢI May Mắn - Thú bông mini (Ô 1 hoặc Ô 4)
             if ((dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 6) && (timeInMinutes >= 1200 && timeInMinutes <= 1320)) {
                 if (mayManWonWeek < 3) {
                     localStorage.setItem(`${weekKey}_MAYMAN`, mayManWonWeek + 1);
-                    return 1; // Trúng Thú bông mini
+                    return Math.random() > 0.5 ? 1 : 4; 
                 }
             }
 
-            // C. KIỂM TRA GIẢI BA: Quà Kỷ Niệm - Móc khóa xinh (Ô 2)
-            // Thứ 2 - Thứ 5: Sáng 1, Chiều 2, Tối 4
-            // Thứ 6 - Chủ Nhật: Sáng 2, Chiều 4, Tối 8
+            // C. GIẢI Quà Kỷ Niệm - Móc khóa xinh (Ô 2 hoặc Ô 5)
             let maxMocKhoaAllowed = 0;
             const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0);
 
@@ -338,18 +332,18 @@
 
             if (sessionKey !== "TONG" && mocKhoaWonSession < maxMocKhoaAllowed) {
                 localStorage.setItem(`${todayKey}_MOCKHOA_${sessionKey}`, mocKhoaWonSession + 1);
-                return 2; // Trúng Móc khóa xinh
+                return Math.random() > 0.5 ? 2 : 5; 
             }
 
-            // D. MẶC ĐỊNH: Trả về một trong các ô "Chúc Bạn May Mắn Lần Sau" (Ô 3 đến Ô 7)
-            const failSectors = [3, 4, 5, 6, 7];
+            // D. MẶC ĐỊNH TRÚNG "Chúc Bạn May Mắn Lần Sau" (Ô 3, 6, 7)
+            const failSectors = [3, 6, 7];
             return failSectors[Math.floor(Math.random() * failSectors.length)];
         }
 
-        // --- 7. XỬ LÝ SỰ KIỆN QUAY HOẠT HỌA MƯỢT MÀ ---
+        // 7. XỬ LÝ QUAY TỰ NHIÊN & CHÍNH XÁC KÍCH THƯỚC/KIM CHỈ
         let isSpinning = false;
         let animationId = null;
-        let currentAngle = 0;
+        let currentRotation = 0; // Lưu vị trí góc hiện tại
         let lastSectorIndex = -1;
         
         const spinBtn = document.getElementById('spinBtn');
@@ -365,60 +359,67 @@
             
             if (animationId) cancelAnimationFrame(animationId);
             
-            // Cập nhật số lượt quay trong ngày
             let newCompleted = getCompletedSpinsCount() + 1;
             localStorage.setItem(`${getTodayKey()}_TOTAL`, newCompleted);
             renderSpinCounter();
             spinRef.transaction((val) => (val || 0) + 1);
 
-            // 1. Xác định ô giải thưởng sẽ trúng dựa theo thời gian thực
-            const winningSectorIndex = determinePrizeIndex();
+            // 1. Xác định ô giải thưởng trúng
+            const winningIndex = determinePrizeIndex();
 
-            // 2. Tính toán góc quay chính xác để kim chỉ đúng ô trúng thưởng
-            const sectorAngle = 360 / numSectors; 
-            const targetSectorCenter = 360 - (winningSectorIndex * sectorAngle + sectorAngle / 2);
-            const extraRounds = 360 * 10; // Quay 10 vòng cho hấp dẫn
-            const targetTotalAngle = extraRounds + targetSectorCenter;
+            // 2. Tính toán góc quay chuẩn xác cho Kim ở vị trí 12h (270 độ / -90 độ trong hệ tọa độ Canvas)
+            // Tâm của ô i tính theo độ = i * 45 + 22.5
+            const sectorCenterDeg = winningIndex * sectorAngleDeg + (sectorAngleDeg / 2);
+            
+            // Góc xoay cần đạt tới để tâm ô i dừng ở đỉnh 12h:
+            const targetDegree = (360 - sectorCenterDeg + 270) % 360;
+            
+            // Số vòng quay cộng thêm (5 vòng) để tạo hiệu ứng nhanh mượt
+            const extraRounds = 360 * 5; 
+            
+            // Tính tổng số độ xoay cần thêm từ vị trí hiện tại
+            const startRotation = currentRotation;
+            const targetRotation = startRotation + extraRounds + ((targetDegree - (startRotation % 360) + 360) % 360);
 
-            const totalDuration = 12000; // Thời gian quay 12 giây
+            const duration = 5000; // Thời gian quay cố định 5 giây mượt mà
             let startTime = null;
-            let startAngle = currentAngle % 360;
 
-            function animateWheel(timestamp) {
+            function animate(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
-                const progress = Math.min(elapsed / totalDuration, 1);
+                const progress = Math.min(elapsed / duration, 1);
 
-                // Hiệu ứng Ease-Out giúp vòng quay chậm dần mượt mà
-                const easeOutProgress = 1 - Math.pow(1 - progress, 4);
-                currentAngle = startAngle + (targetTotalAngle - startAngle) * easeOutProgress;
+                // Công thức Ease-Out Cubic: Giúp tốc độ quay mượt và chậm dần đều
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
 
-                // Phát âm thanh khi đi qua từng ô
-                const currentSector = Math.floor(((360 - (currentAngle % 360) + 270) % 360) / sectorAngle);
-                if (currentSector !== lastSectorIndex) {
+                // Xoay thẻ Canvas
+                canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+                // Âm thanh mỗi khi đi qua ô mới
+                const activeSector = Math.floor(((360 - (currentRotation % 360) + 270) % 360) / sectorAngleDeg) % numSectors;
+                if (activeSector !== lastSectorIndex) {
                     playTickSound();
-                    lastSectorIndex = currentSector;
+                    lastSectorIndex = activeSector;
                 }
 
-                canvas.style.transform = `rotate(${currentAngle}deg)`;
-
                 if (progress < 1) {
-                    animationId = requestAnimationFrame(animateWheel);
+                    animationId = requestAnimationFrame(animate);
                 } else {
-                    const prize = gifts[winningSectorIndex];
+                    const prize = gifts[winningIndex];
                     playWinSound();
 
                     if (prize === "Chúc Bạn May Mắn Lần Sau") {
-                        resultText.innerHTML = `🎉 ${prize}! Cảm ơn bạn đã tham gia.`;
+                        resultText.innerHTML = `🎉 ${prize}! Chúc bạn may mắn lần kế tiếp.`;
                     } else {
-                        resultText.innerHTML = `🎁 Chúc mừng bạn đã trúng: <br><span style="color:#fcf6ba; font-size:24px;">${prize}</span>!`;
+                        resultText.innerHTML = `🎁 Chúc mừng bạn đã trúng: <br><span style="color:#fcf6ba; font-size:22px;">${prize}</span>!`;
                     }
                     resultText.style.display = 'block';
                     isSpinning = false;
                 }
             }
 
-            animationId = requestAnimationFrame(animateWheel);
+            animationId = requestAnimationFrame(animate);
         });
     </script>
 </body>
