@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
+    <!-- 1. KẾT NỐI PWA VÀ CẤU HÌNH GIAO DIỆN APP MOBILE -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#bf953f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PHOTO EVE">
+
     <!-- CHỐNG TRÌNH DUYỆT LƯU CACHE CŨ -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -29,13 +36,12 @@
             min-height: 100vh;
             margin: 0;
             padding: 10px;
-            /* TÔNG NỀN ÁNH KIM SANG TRỌNG */
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
             color: #f8fafc;
             overflow-x: hidden;
         }
 
-        /* 1. TIÊU ĐỀ THƯƠNG HIỆU THU GỌN VỪA VẶN */
+        /* TIÊU ĐỀ THƯƠNG HIỆU GỌN GÀNG */
         .brand-header {
             text-align: center;
             margin-bottom: 5px;
@@ -61,7 +67,7 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
-        /* 2. KHUNG VÒNG QUAY TỐI ƯU KÍCH THƯỚC MOBI (280px) */
+        /* KHUNG VÒNG QUAY MOBI (280px) */
         .wheel-container {
             position: relative;
             margin: 8px 0;
@@ -77,7 +83,6 @@
             height: 280px;
         }
         
-        /* KIM CHỈ NỔI BẬT */
         .pointer {
             position: absolute;
             top: -12px;
@@ -92,7 +97,7 @@
             filter: drop-shadow(0 3px 5px rgba(0,0,0,0.9));
         }
 
-        /* 3. NÚT QUAY */
+        /* NÚT QUAY */
         button {
             padding: 10px 36px;
             font-size: 16px;
@@ -111,7 +116,7 @@
             box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
         }
 
-        /* 4. DÒNG BÁO KẾT QUẢ GỌN GÀNG KHÔNG ĐẨY MÀN HÌNH */
+        /* KHUNG THÔNG BÁO KẾT QUẢ KHÔNG ĐẨY MÀN HÌNH */
         #resultText {
             margin-top: 6px;
             font-size: 16px;
@@ -123,7 +128,7 @@
             line-height: 1.3;
         }
 
-        /* 5. PANEL THÔNG TIN LƯỢT QUAY VÀ THỜI GIAN CỐ ĐỊNH TỐT VỊ TRÍ */
+        /* PANEL THÔNG TIN LƯỢT QUAY VÀ THỜI GIAN */
         .info-panel {
             margin-top: 8px;
             padding: 8px 18px;
@@ -156,7 +161,6 @@
 
     <div class="wheel-container">
         <div class="pointer"></div>
-        <!-- Cập nhật độ phân giải nét cho canvas 280x280 -->
         <canvas id="wheel" width="280" height="280"></canvas>
     </div>
 
@@ -170,7 +174,16 @@
     </div>
 
     <script>
-        // --- 1. QUẢN LÝ KHÓA THỜI GIAN & BỘ ĐẾM ---
+        // --- 2. ĐĂNG KÝ SERVICE WORKER (ĐỂ CHẠY NỀN PWA) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('PWA đăng ký thành công:', reg))
+                    .catch(err => console.log('PWA đăng ký thất bại:', err));
+            });
+        }
+
+        // --- QUẢN LÝ KHÓA THỜI GIAN & BỘ ĐẾM ---
         function getTodayKey() {
             const now = new Date();
             return `PHOTOEVE_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -196,13 +209,13 @@
         }
         renderSpinCounter();
 
-        // --- 2. CẤU HÌNH FIREBASE ---
+        // --- CẤU HÌNH FIREBASE ---
         const firebaseConfig = { databaseURL: "https://photoeve-cloud-default-rtdb.firebaseio.com/" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const spinRef = database.ref('daily_spins/' + getTodayKey());
 
-        // --- 3. AM THANH (WEB AUDIO API) ---
+        // --- ÂM THANH (WEB AUDIO API) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -241,7 +254,7 @@
             });
         }
 
-        // --- 4. ĐỒNG HỒ ---
+        // --- ĐỒNG HỒ THỜI GIAN THỰC ---
         function updateClock() {
             const now = new Date();
             const options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hour12: false };
@@ -254,19 +267,19 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // --- 5. CẤU HÌNH VÒNG QUAY (280x280) ---
+        // --- CẤU HÌNH VÒNG QUAY ---
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         
         const gifts = [
-            "VIP PHOTO EVE - Album",        // Ô 0
-            "May Mắn - Thú bông mini",     // Ô 1
-            "Quà Kỷ Niệm - Móc khóa xinh", // Ô 2
-            "Chúc Bạn May Mắn Lần Sau",   // Ô 3
-            "May Mắn - Thú bông mini",     // Ô 4
-            "Quà Kỷ Niệm - Móc khóa xinh", // Ô 5
-            "Chúc Bạn May Mắn Lần Sau",   // Ô 6
-            "Chúc Bạn May Mắn Lần Sau"    // Ô 7
+            "VIP PHOTO EVE - Album",        
+            "May Mắn - Thú bông mini",     
+            "Quà Kỷ Niệm - Móc khóa xinh", 
+            "Chúc Bạn May Mắn Lần Sau",   
+            "May Mắn - Thú bông mini",     
+            "Quà Kỷ Niệm - Móc khóa xinh", 
+            "Chúc Bạn May Mắn Lần Sau",   
+            "Chúc Bạn May Mắn Lần Sau"    
         ];
         
         const colors = ["#800020", "#1B2A4A", "#2C5E3B", "#34495E", "#1B2A4A", "#2C5E3B", "#34495E", "#2C3E50"];
@@ -292,7 +305,7 @@
                 ctx.translate(140, 140);
                 ctx.rotate(angle + arc / 2);
                 ctx.fillStyle = "#FCF6BA"; 
-                ctx.font = "bold 9px sans-serif"; // Tối ưu cỡ chữ nét đẹp trên khung 280px
+                ctx.font = "bold 9px sans-serif";
                 ctx.textAlign = "right";
                 ctx.fillText(gifts[i], 132, 3);
                 ctx.restore();
@@ -300,7 +313,7 @@
         }
         drawWheel();
 
-        // --- 6. THUẬT TOÁN ĐIỀU HƯỚNG KẾT QUẢ THEO LỊCH ---
+        // --- THUẬT TOÁN ĐIỀU HƯỚNG KẾT QUẢ ---
         function determinePrizeIndex() {
             const now = new Date();
             const dayOfWeek = now.getDay(); 
@@ -321,7 +334,6 @@
 
             const mocKhoaWonSession = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_${sessionKey}`) || '0', 10);
 
-            // A. GIẢI VIP PHOTO EVE - Album (Ô 0)
             if ((dayOfWeek === 5 || dayOfWeek === 0) && (timeInMinutes >= 1230 && timeInMinutes <= 1290)) {
                 if (vipWonWeek < 2) {
                     localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
@@ -329,7 +341,6 @@
                 }
             }
 
-            // B. GIẢI May Mắn - Thú bông mini (Ô 1 hoặc Ô 4)
             if ((dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 6) && (timeInMinutes >= 1200 && timeInMinutes <= 1320)) {
                 if (mayManWonWeek < 3) {
                     localStorage.setItem(`${weekKey}_MAYMAN`, mayManWonWeek + 1);
@@ -337,7 +348,6 @@
                 }
             }
 
-            // C. GIẢI Quà Kỷ Niệm - Móc khóa xinh (Ô 2 hoặc Ô 5)
             let maxMocKhoaAllowed = 0;
             const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0);
 
@@ -350,12 +360,11 @@
                 return Math.random() > 0.5 ? 2 : 5; 
             }
 
-            // D. MẶC ĐỊNH "Chúc Bạn May Mắn Lần Sau" (Ô 3, 6, 7)
             const failSectors = [3, 6, 7];
             return failSectors[Math.floor(Math.random() * failSectors.length)];
         }
 
-        // --- 7. HOẠT HỌA QUAY 12 GIÂY KỊCH TÍNH & CHÍNH XÁC ---
+        // --- HOẠT HỌA QUAY 12 GIÂY KỊCH TÍNH ---
         let isSpinning = false;
         let animationId = null;
         let currentRotation = 0; 
@@ -381,17 +390,13 @@
 
             const winningIndex = determinePrizeIndex();
 
-            // Tính toán góc dừng chuẩn tại vị trí 12h
             const sectorCenterDeg = winningIndex * sectorAngleDeg + (sectorAngleDeg / 2);
             const targetDegree = (360 - sectorCenterDeg + 270) % 360;
-            
-            // Xoay 12 vòng (12 * 360 độ) để tạo độ hồi hộp
             const extraRounds = 360 * 12; 
             
             const startRotation = currentRotation;
             const targetRotation = startRotation + extraRounds + ((targetDegree - (startRotation % 360) + 360) % 360);
 
-            // Đặt thời gian quay 12 giây (12000 milliseconds)
             const duration = 12000; 
             let startTime = null;
 
@@ -400,13 +405,11 @@
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Công thức Ease-Out Quart: Xoay tít lúc đầu và giảm tốc kịch tính ở những giây cuối
                 const easeOut = 1 - Math.pow(1 - progress, 4);
                 currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
 
                 canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-                // Phát tiếng tích tắc khi lướt qua từng ô
                 const activeSector = Math.floor(((360 - (currentRotation % 360) + 270) % 360) / sectorAngleDeg) % numSectors;
                 if (activeSector !== lastSectorIndex) {
                     playTickSound();
