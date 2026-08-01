@@ -2,61 +2,82 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- CHỐNG TRÌNH DUYỆT LƯU CACHE CŨ -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <title>PHOTO EVE - Vòng Quay May Mắn</title>
-    <link rel="manifest" href="manifest.json">
+    
+    <!-- SDK Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
         }
 
         body {
-            background-color: #0b1325;
-            color: #ffffff;
+            font-family: 'Cinzel', 'Playfair Display', 'Segoe UI', serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 20px;
+            margin: 0;
+            padding: 10px;
+            /* TÔNG NỀN ÁNH KIM SANG TRỌNG */
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
+            color: #f8fafc;
+            overflow-x: hidden;
         }
 
-        .header-title {
+        /* 1. TIÊU ĐỀ THƯƠNG HIỆU THU GỌN VỪA VẶN */
+        .brand-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
-
-        .header-title h1 {
-            color: #fcf6ba;
-            font-size: 28px;
+        .brand-title {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            text-transform: uppercase;
+            filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.8));
+        }
+        .brand-subtitle {
+            font-size: 13px;
             letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(252, 246, 186, 0.3);
+            color: #f3e8ff;
+            margin-top: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
-        .header-title p {
-            color: #d1d5db;
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
-        /* KHU VỰC VÒNG QUAY */
+        /* 2. KHUNG VÒNG QUAY TỐI ƯU KÍCH THƯỚC MOBI (280px) */
         .wheel-container {
             position: relative;
-            width: 320px;
-            height: 320px;
-            margin-bottom: 20px;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
+            margin: 8px 0;
+            padding: 6px;
             border-radius: 50%;
-            box-shadow: 0 0 25px rgba(252, 246, 186, 0.3);
+            background: linear-gradient(135deg, #ffd700, #b8860b, #d4af37);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4), inset 0 0 10px rgba(0,0,0,0.5);
         }
-
+        #wheel {
+            border-radius: 50%;
+            display: block;
+            width: 280px;
+            height: 280px;
+        }
+        
+        /* KIM CHỈ NỔI BẬT */
         .pointer {
             position: absolute;
             top: -12px;
@@ -66,299 +87,349 @@
             height: 0;
             border-left: 14px solid transparent;
             border-right: 14px solid transparent;
-            border-top: 24px solid #ef4444;
+            border-top: 28px solid #ff3333;
             z-index: 10;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.9));
         }
 
-        /* KHU VỰC NÚT BẤM */
-        .controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-            max-width: 320px;
-        }
-
+        /* 3. NÚT QUAY */
         button {
-            width: 100%;
-            padding: 12px 20px;
-            font-size: 15px;
+            padding: 10px 36px;
+            font-size: 16px;
             font-weight: bold;
-            border-radius: 25px;
-            border: none;
+            letter-spacing: 2px;
+            color: #0f172a;
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
+            border: 2px solid #ffe599;
+            border-radius: 50px;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
             transition: all 0.2s ease;
         }
-
-        button:active {
-            transform: scale(0.97);
+        button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
         }
 
-        #spinBtn {
-            background: linear-gradient(135deg, #fcf6ba 0%, #bf953f 100%);
-            color: #111827;
-            box-shadow: 0 4px 15px rgba(191, 149, 63, 0.4);
-        }
-
-        #recordBtn {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #ffffff;
-            border: 1px solid #fca5a5;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        #installPwaBtn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: #ffffff;
-            border: 1px solid #34d399;
+        /* 4. DÒNG BÁO KẾT QUẢ GỌN GÀNG KHÔNG ĐẨY MÀN HÌNH */
+        #resultText {
+            margin-top: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #38bdf8;
             display: none;
-        }
-
-        .sub-text {
-            font-size: 12px;
-            color: #9ca3af;
             text-align: center;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+            line-height: 1.3;
         }
 
-        /* BẢNG THÔNG TIN LƯỢT QUAY */
+        /* 5. PANEL THÔNG TIN LƯỢT QUAY VÀ THỜI GIAN CỐ ĐỊNH TỐT VỊ TRÍ */
         .info-panel {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(252, 246, 186, 0.2);
-            border-radius: 12px;
-            padding: 12px 20px;
+            margin-top: 8px;
+            padding: 8px 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 10px;
             text-align: center;
             width: 100%;
             max-width: 320px;
-            margin-top: 10px;
         }
-
         .spin-count {
+            font-size: 14px;
+            font-weight: 700;
             color: #fcf6ba;
-            font-weight: bold;
-            font-size: 15px;
-            margin-bottom: 4px;
         }
-
         .time-display {
-            color: #d1d5db;
-            font-size: 13px;
-        }
-
-        #resultText {
-            margin-top: 15px;
-            font-size: 16px;
-            text-align: center;
-            font-weight: bold;
-            color: #fcf6ba;
-            min-height: 24px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #cbd5e1;
+            margin-top: 2px;
         }
     </style>
 </head>
 <body>
 
-    <!-- TIÊU ĐỀ -->
-    <div class="header-title">
-        <h1>PHOTO EVE</h1>
-        <p>VÒNG QUAY MAY MẮN</p>
+    <div class="brand-header">
+        <h1 class="brand-title">PHOTO EVE</h1>
+        <div class="brand-subtitle">Vòng Quay May Mắn</div>
     </div>
 
-    <!-- KHU VỰC VÒNG QUAY -->
     <div class="wheel-container">
         <div class="pointer"></div>
-        <canvas id="wheel" width="320" height="320"></canvas>
+        <!-- Cập nhật độ phân giải nét cho canvas 280x280 -->
+        <canvas id="wheel" width="280" height="280"></canvas>
     </div>
 
-    <!-- KHU VỰC NÚT ĐIỀU KHIỂN -->
-    <div class="controls">
-        <button id="spinBtn">QUAY</button>
-        <p class="sub-text">Bấm nút để thử vận may ngay!</p>
-
-        <!-- BẢNG THÔNG TIN LƯỢT QUAY -->
-        <div class="info-panel">
-            <div class="spin-count" id="spinCountDisplay">Lượt quay trong ngày: #11</div>
-            <div class="time-display" id="clockDisplay">16:55:51 - 25/07/2026</div>
-        </div>
-
-        <!-- NÚT CHỨC NĂNG BỔ SUNG -->
-        <button id="recordBtn">🎥 QUAY VÀ TẢI VIDEO QUẢNG CÁO</button>
-        <button id="installPwaBtn">📲 CÀI ĐẶT APP PHOTO EVE</button>
-    </div>
-
-    <!-- THÔNG BÁO KẾT QUẢ -->
+    <button id="spinBtn">QUAY</button>
+    <div id="subText" style="margin-top: 6px; color: #94a3b8; font-size: 12px;">Bấm nút để thử vận may ngay!</div>
     <div id="resultText"></div>
+    
+    <div class="info-panel">
+        <div class="spin-count" id="spinCountDisplay">Lượt quay trong ngày: #...</div>
+        <div class="time-display" id="clockDisplay">00:00:00 - 00/00/0000</div>
+    </div>
 
-    <!-- KỊCH BẢN XỬ LÝ JAVASCRIPT -->
     <script>
-        // --- 1. KHỞI TẠO VÒNG QUAY VÀ CÁC PHẦN THƯỞNG ---
+        // --- 1. QUẢN LÝ KHÓA THỜI GIAN & BỘ ĐẾM ---
+        function getTodayKey() {
+            const now = new Date();
+            return `PHOTOEVE_${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        }
+
+        function getWeekKey() {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+            const yearStart = new Date(d.getFullYear(), 0, 1);
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `PHOTOEVE_WEEK_${d.getFullYear()}-W${weekNo}`;
+        }
+
+        function getCompletedSpinsCount() {
+            const saved = localStorage.getItem(`${getTodayKey()}_TOTAL`);
+            return saved ? parseInt(saved, 10) : 0;
+        }
+
+        function renderSpinCounter() {
+            const nextSpinNumber = getCompletedSpinsCount() + 1;
+            document.getElementById('spinCountDisplay').innerText = `Lượt quay trong ngày: #${nextSpinNumber}`;
+        }
+        renderSpinCounter();
+
+        // --- 2. CẤU HÌNH FIREBASE ---
+        const firebaseConfig = { databaseURL: "https://photoeve-cloud-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const spinRef = database.ref('daily_spins/' + getTodayKey());
+
+        // --- 3. AM THANH (WEB AUDIO API) ---
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playTickSound() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+
+        function playWinSound() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                let startTime = audioCtx.currentTime + index * 0.1;
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + 0.3);
+            });
+        }
+
+        // --- 4. ĐỒNG HỒ ---
+        function updateClock() {
+            const now = new Date();
+            const options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hour12: false };
+            const formatter = new Intl.DateTimeFormat('vi-VN', options);
+            const parts = formatter.formatToParts(now);
+            let t = {};
+            parts.forEach(p => t[p.type] = p.value);
+            document.getElementById('clockDisplay').innerText = `${t.hour}:${t.minute}:${t.second} - ${t.day}/${t.month}/${t.year}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 5. CẤU HÌNH VÒNG QUAY (280x280) ---
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
-        const spinBtn = document.getElementById('spinBtn');
-        const resultText = document.getElementById('resultText');
-
+        
         const gifts = [
-            "Chúc Bạn May Mắn Lần Sau",
-            "Móc Khóa Xinh",
-            "Thu Bông Mini",
-            "Chúc Bạn May Mắn Lần Sau",
-            "VIP PHOTO EVE - Album",
-            "Móc Khóa Xinh",
-            "Thu Bông Mini",
-            "Chúc Bạn May Mắn Lần Sau"
+            "VIP PHOTO EVE - Album",        // Ô 0
+            "May Mắn - Thú bông mini",     // Ô 1
+            "Quà Kỷ Niệm - Móc khóa xinh", // Ô 2
+            "Chúc Bạn May Mắn Lần Sau",   // Ô 3
+            "May Mắn - Thú bông mini",     // Ô 4
+            "Quà Kỷ Niệm - Móc khóa xinh", // Ô 5
+            "Chúc Bạn May Mắn Lần Sau",   // Ô 6
+            "Chúc Bạn May Mắn Lần Sau"    // Ô 7
         ];
-
-        const colors = [
-            "#1d2939", "#344054", "#1d2939", "#344054",
-            "#7a1b1b", "#344054", "#1d2939", "#344054"
-        ];
-
+        
+        const colors = ["#800020", "#1B2A4A", "#2C5E3B", "#34495E", "#1B2A4A", "#2C5E3B", "#34495E", "#2C3E50"];
         const numSectors = gifts.length;
-        const sectorAngle = (2 * Math.PI) / numSectors;
+        const sectorAngleDeg = 360 / numSectors; 
+        const arc = 2 * Math.PI / numSectors;
 
-        let currentRotation = 0;
-        let isSpinning = false;
-
-        // Vẽ các ô phần thưởng lên Canvas
         function drawWheel() {
-            const radius = canvas.width / 2;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+            ctx.clearRect(0, 0, 280, 280);
             for (let i = 0; i < numSectors; i++) {
-                const angle = i * sectorAngle;
-                
-                // Vẽ ô hình quạt
-                ctx.beginPath();
+                let angle = i * arc;
                 ctx.fillStyle = colors[i];
-                ctx.moveTo(radius, radius);
-                ctx.arc(radius, radius, radius - 5, angle, angle + sectorAngle);
+                ctx.beginPath();
+                ctx.arc(140, 140, 140, angle, angle + arc);
+                ctx.lineTo(140, 140);
                 ctx.fill();
-                ctx.strokeStyle = "#bf953f";
-                ctx.lineWidth = 2;
+                
+                ctx.strokeStyle = "rgba(255, 215, 0, 0.5)";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
 
-                // Vẽ chữ phần thưởng
                 ctx.save();
-                ctx.translate(radius, radius);
-                ctx.rotate(angle + sectorAngle / 2);
+                ctx.translate(140, 140);
+                ctx.rotate(angle + arc / 2);
+                ctx.fillStyle = "#FCF6BA"; 
+                ctx.font = "bold 9px sans-serif"; // Tối ưu cỡ chữ nét đẹp trên khung 280px
                 ctx.textAlign = "right";
-                ctx.fillStyle = "#fcf6ba";
-                ctx.font = "bold 11px Arial";
-                ctx.fillText(gifts[i], radius - 15, 4);
+                ctx.fillText(gifts[i], 132, 3);
                 ctx.restore();
             }
         }
         drawWheel();
 
-        // Cập nhật đồng hồ thời gian thực
-        function updateClock() {
+        // --- 6. THUẬT TOÁN ĐIỀU HƯỚNG KẾT QUẢ THEO LỊCH ---
+        function determinePrizeIndex() {
             const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0];
-            const dateStr = now.toLocaleDateString('vi-VN');
-            document.getElementById('clockDisplay').innerText = `${timeStr} - ${dateStr}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
+            const dayOfWeek = now.getDay(); 
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const timeInMinutes = hour * 60 + minute;
 
-        // --- 2. THUẬT TOÁN QUAY VÒNG QUAY ---
-        function runSpin() {
+            const weekKey = getWeekKey();
+            const todayKey = getTodayKey();
+
+            const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
+            const mayManWonWeek = parseInt(localStorage.getItem(`${weekKey}_MAYMAN`) || '0', 10);
+            
+            let sessionKey = "TONG";
+            if (hour >= 6 && hour < 12) sessionKey = "SANG";
+            else if (hour >= 12 && hour < 18) sessionKey = "CHIEU";
+            else if (hour >= 18) sessionKey = "TOI";
+
+            const mocKhoaWonSession = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_${sessionKey}`) || '0', 10);
+
+            // A. GIẢI VIP PHOTO EVE - Album (Ô 0)
+            if ((dayOfWeek === 5 || dayOfWeek === 0) && (timeInMinutes >= 1230 && timeInMinutes <= 1290)) {
+                if (vipWonWeek < 2) {
+                    localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
+                    return 0; 
+                }
+            }
+
+            // B. GIẢI May Mắn - Thú bông mini (Ô 1 hoặc Ô 4)
+            if ((dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 6) && (timeInMinutes >= 1200 && timeInMinutes <= 1320)) {
+                if (mayManWonWeek < 3) {
+                    localStorage.setItem(`${weekKey}_MAYMAN`, mayManWonWeek + 1);
+                    return Math.random() > 0.5 ? 1 : 4; 
+                }
+            }
+
+            // C. GIẢI Quà Kỷ Niệm - Móc khóa xinh (Ô 2 hoặc Ô 5)
+            let maxMocKhoaAllowed = 0;
+            const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0);
+
+            if (sessionKey === "SANG") maxMocKhoaAllowed = isWeekend ? 2 : 1;
+            else if (sessionKey === "CHIEU") maxMocKhoaAllowed = isWeekend ? 4 : 2;
+            else if (sessionKey === "TOI") maxMocKhoaAllowed = isWeekend ? 8 : 4;
+
+            if (sessionKey !== "TONG" && mocKhoaWonSession < maxMocKhoaAllowed) {
+                localStorage.setItem(`${todayKey}_MOCKHOA_${sessionKey}`, mocKhoaWonSession + 1);
+                return Math.random() > 0.5 ? 2 : 5; 
+            }
+
+            // D. MẶC ĐỊNH "Chúc Bạn May Mắn Lần Sau" (Ô 3, 6, 7)
+            const failSectors = [3, 6, 7];
+            return failSectors[Math.floor(Math.random() * failSectors.length)];
+        }
+
+        // --- 7. HOẠT HỌA QUAY 12 GIÂY KỊCH TÍNH & CHÍNH XÁC ---
+        let isSpinning = false;
+        let animationId = null;
+        let currentRotation = 0; 
+        let lastSectorIndex = -1;
+        
+        const spinBtn = document.getElementById('spinBtn');
+        const subText = document.getElementById('subText');
+        const resultText = document.getElementById('resultText');
+        
+        spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
-            resultText.innerText = "";
+            
+            subText.style.display = 'none';
+            resultText.style.display = 'none';
+            
+            if (animationId) cancelAnimationFrame(animationId);
+            
+            let newCompleted = getCompletedSpinsCount() + 1;
+            localStorage.setItem(`${getTodayKey()}_TOTAL`, newCompleted);
+            renderSpinCounter();
+            spinRef.transaction((val) => (val || 0) + 1);
 
-            const winningIndex = Math.floor(Math.random() * numSectors);
-            const extraRounds = 5;
-            const targetAngle = (360 * extraRounds) + (360 - (winningIndex * (360 / numSectors))) - (360 / numSectors / 2);
+            const winningIndex = determinePrizeIndex();
 
+            // Tính toán góc dừng chuẩn tại vị trí 12h
+            const sectorCenterDeg = winningIndex * sectorAngleDeg + (sectorAngleDeg / 2);
+            const targetDegree = (360 - sectorCenterDeg + 270) % 360;
+            
+            // Xoay 12 vòng (12 * 360 độ) để tạo độ hồi hộp
+            const extraRounds = 360 * 12; 
+            
+            const startRotation = currentRotation;
+            const targetRotation = startRotation + extraRounds + ((targetDegree - (startRotation % 360) + 360) % 360);
+
+            // Đặt thời gian quay 12 giây (12000 milliseconds)
+            const duration = 12000; 
             let startTime = null;
-            const duration = 12000; // 12 giây
 
             function animate(timestamp) {
                 if (!startTime) startTime = timestamp;
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Chuyển động chậm dần (easeOut)
+                // Công thức Ease-Out Quart: Xoay tít lúc đầu và giảm tốc kịch tính ở những giây cuối
                 const easeOut = 1 - Math.pow(1 - progress, 4);
-                currentRotation = targetAngle * easeOut;
+                currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
 
                 canvas.style.transform = `rotate(${currentRotation}deg)`;
 
+                // Phát tiếng tích tắc khi lướt qua từng ô
+                const activeSector = Math.floor(((360 - (currentRotation % 360) + 270) % 360) / sectorAngleDeg) % numSectors;
+                if (activeSector !== lastSectorIndex) {
+                    playTickSound();
+                    lastSectorIndex = activeSector;
+                }
+
                 if (progress < 1) {
-                    requestAnimationFrame(animate);
+                    animationId = requestAnimationFrame(animate);
                 } else {
-                    isSpinning = false;
                     const prize = gifts[winningIndex];
-                    if (prize.includes("Lần Sau")) {
-                        resultText.innerText = "🎉 Chúc bạn may mắn lần kế tiếp!";
+                    playWinSound();
+
+                    if (prize === "Chúc Bạn May Mắn Lần Sau") {
+                        resultText.innerHTML = `🎉 ${prize}! Chúc bạn may mắn lần kế tiếp.`;
                     } else {
-                        resultText.innerText = `🎁 Chúc mừng bạn trúng: ${prize}!`;
+                        resultText.innerHTML = `🎁 Chúc mừng bạn đã trúng: <br><span style="color:#fcf6ba; font-size:18px;">${prize}</span>!`;
                     }
+                    resultText.style.display = 'block';
+                    isSpinning = false;
                 }
             }
-            requestAnimationFrame(animate);
-        }
 
-        spinBtn.addEventListener('click', runSpin);
-
-        // --- 3. MÃ QUAY VÀ TẢI VIDEO QUẢNG CÁO (MediaRecorder API) ---
-        const recordBtn = document.getElementById('recordBtn');
-
-        recordBtn.addEventListener('click', () => {
-            if (isSpinning) return;
-
-            // Thu luồng hình ảnh 30 FPS từ thẻ Canvas
-            const canvasStream = canvas.captureStream(30);
-            let recordedChunks = [];
-
-            const mediaRecorder = new MediaRecorder(canvasStream, {
-                mimeType: 'video/webm;codecs=vp9'
-            });
-
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) recordedChunks.push(event.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'PHOTO_EVE_VongQuay_QuangCao.webm';
-                a.click();
-                URL.revokeObjectURL(url);
-                alert('Đã tải xong video quảng cáo!');
-            };
-
-            mediaRecorder.start();
-            runSpin(); // Tự động bắt đầu quay vòng quay
-
-            // Dừng quay video sau 13 giây
-            setTimeout(() => {
-                if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            }, 13000);
-        });
-
-        // --- 4. MÃ CÀI ĐẶT ỨNG DỤNG (PWA) ---
-        let deferredPrompt = null;
-        const installBtn = document.getElementById('installPwaBtn');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installBtn.style.display = 'block';
-        });
-
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            installBtn.style.display = 'none';
-        });
-
-        window.addEventListener('appinstalled', () => {
-            installBtn.style.display = 'none';
+            animationId = requestAnimationFrame(animate);
         });
     </script>
 </body>
