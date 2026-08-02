@@ -156,7 +156,6 @@
 
     <div class="wheel-container">
         <div class="pointer"></div>
-        <!-- Cập nhật độ phân giải nét cho canvas 280x280 -->
         <canvas id="wheel" width="280" height="280"></canvas>
     </div>
 
@@ -202,7 +201,7 @@
         const database = firebase.database();
         const spinRef = database.ref('daily_spins/' + getTodayKey());
 
-        // --- 3. AM THANH (WEB AUDIO API) ---
+        // --- 3. ÂM THANH (WEB AUDIO API) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -292,7 +291,7 @@
                 ctx.translate(140, 140);
                 ctx.rotate(angle + arc / 2);
                 ctx.fillStyle = "#FCF6BA"; 
-                ctx.font = "bold 9px sans-serif"; // Tối ưu cỡ chữ nét đẹp trên khung 280px
+                ctx.font = "bold 9px sans-serif";
                 ctx.textAlign = "right";
                 ctx.fillText(gifts[i], 132, 3);
                 ctx.restore();
@@ -300,62 +299,48 @@
         }
         drawWheel();
 
-        // --- 6. THUẬT TOÁN ĐIỀU HƯỚNG KẾT QUẢ THEO LỊCH ---
+        // --- 6. CƠ CẤU TRAO GIẢI CHUẨN XÁC THEO HẠN NGẠCH TUẦN ---
         function determinePrizeIndex() {
             const now = new Date();
-            const dayOfWeek = now.getDay(); 
             const hour = now.getHours();
-            const minute = now.getMinutes();
-            const timeInMinutes = hour * 60 + minute;
-
             const weekKey = getWeekKey();
-            const todayKey = getTodayKey();
 
+            // Đọc số lượng giải đã trao trong tuần hiện tại từ localStorage
             const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
-            const mayManWonWeek = parseInt(localStorage.getItem(`${weekKey}_MAYMAN`) || '0', 10);
-            
-            let sessionKey = "TONG";
-            if (hour >= 6 && hour < 12) sessionKey = "SANG";
-            else if (hour >= 12 && hour < 18) sessionKey = "CHIEU";
-            else if (hour >= 18) sessionKey = "TOI";
+            const gaubongWonWeek = parseInt(localStorage.getItem(`${weekKey}_GAUBONG`) || '0', 10);
+            const mockhoaWonWeek = parseInt(localStorage.getItem(`${weekKey}_MOCKHOA`) || '0', 10);
 
-            const mocKhoaWonSession = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_${sessionKey}`) || '0', 10);
+            // Chỉ cho phép trúng giải vào khung giờ cao điểm tối (18:00 - 22:59)
+            const isPrimeTime = (hour >= 18 && hour < 23);
 
-            // A. GIẢI VIP PHOTO EVE - Album (Ô 0)
-            if ((dayOfWeek === 5 || dayOfWeek === 0) && (timeInMinutes >= 1230 && timeInMinutes <= 1290)) {
-                if (vipWonWeek < 2) {
+            if (isPrimeTime) {
+                const rand = Math.random() * 100; // Quay số ngẫu nhiên từ 0 đến 100%
+
+                // A. GIẢI VIP PHOTO EVE - Album (Ô 0) -> Tối đa 2 giải / tuần
+                if (rand < 5 && vipWonWeek < 2) {
                     localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
-                    return 0; 
+                    return 0;
+                }
+
+                // B. GIẢI May Mắn - Thú Bông Mini (Ô 1 hoặc Ô 4) -> Tối đa 3 giải / tuần
+                if (rand >= 5 && rand < 20 && gaubongWonWeek < 3) {
+                    localStorage.setItem(`${weekKey}_GAUBONG`, gaubongWonWeek + 1);
+                    return Math.random() > 0.5 ? 1 : 4;
+                }
+
+                // C. GIẢI Quà Kỷ Niệm - Móc Khóa Xinh (Ô 2 hoặc Ô 5) -> Tối đa 10 giải / tuần
+                if (rand >= 20 && rand < 55 && mockhoaWonWeek < 10) {
+                    localStorage.setItem(`${weekKey}_MOCKHOA`, mockhoaWonWeek + 1);
+                    return Math.random() > 0.5 ? 2 : 5;
                 }
             }
 
-            // B. GIẢI May Mắn - Thú bông mini (Ô 1 hoặc Ô 4)
-            if ((dayOfWeek === 2 || dayOfWeek === 4 || dayOfWeek === 6) && (timeInMinutes >= 1200 && timeInMinutes <= 1320)) {
-                if (mayManWonWeek < 3) {
-                    localStorage.setItem(`${weekKey}_MAYMAN`, mayManWonWeek + 1);
-                    return Math.random() > 0.5 ? 1 : 4; 
-                }
-            }
-
-            // C. GIẢI Quà Kỷ Niệm - Móc khóa xinh (Ô 2 hoặc Ô 5)
-            let maxMocKhoaAllowed = 0;
-            const isWeekend = (dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0);
-
-            if (sessionKey === "SANG") maxMocKhoaAllowed = isWeekend ? 2 : 1;
-            else if (sessionKey === "CHIEU") maxMocKhoaAllowed = isWeekend ? 4 : 2;
-            else if (sessionKey === "TOI") maxMocKhoaAllowed = isWeekend ? 8 : 4;
-
-            if (sessionKey !== "TONG" && mocKhoaWonSession < maxMocKhoaAllowed) {
-                localStorage.setItem(`${todayKey}_MOCKHOA_${sessionKey}`, mocKhoaWonSession + 1);
-                return Math.random() > 0.5 ? 2 : 5; 
-            }
-
-            // D. MẶC ĐỊNH "Chúc Bạn May Mắn Lần Sau" (Ô 3, 6, 7)
+            // D. MẶC ĐỊNH "Chúc Bạn May Mắn Lần Sau" (Ô 3, 6, 7) khi hết hạn ngạch hoặc ngoài giờ cao điểm
             const failSectors = [3, 6, 7];
             return failSectors[Math.floor(Math.random() * failSectors.length)];
         }
 
-        // --- 7. HOẠT HỌA QUAY 12 GIÂY KỊCH TÍNH & CHÍNH XÁC ---
+        // --- 7. HOẠT HỌA QUAY 12 GIÂY KỊCH TÍNH ---
         let isSpinning = false;
         let animationId = null;
         let currentRotation = 0; 
@@ -381,17 +366,13 @@
 
             const winningIndex = determinePrizeIndex();
 
-            // Tính toán góc dừng chuẩn tại vị trí 12h
             const sectorCenterDeg = winningIndex * sectorAngleDeg + (sectorAngleDeg / 2);
             const targetDegree = (360 - sectorCenterDeg + 270) % 360;
             
-            // Xoay 12 vòng (12 * 360 độ) để tạo độ hồi hộp
             const extraRounds = 360 * 12; 
-            
             const startRotation = currentRotation;
             const targetRotation = startRotation + extraRounds + ((targetDegree - (startRotation % 360) + 360) % 360);
 
-            // Đặt thời gian quay 12 giây (12000 milliseconds)
             const duration = 12000; 
             let startTime = null;
 
@@ -400,13 +381,11 @@
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / duration, 1);
 
-                // Công thức Ease-Out Quart: Xoay tít lúc đầu và giảm tốc kịch tính ở những giây cuối
                 const easeOut = 1 - Math.pow(1 - progress, 4);
                 currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
 
                 canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-                // Phát tiếng tích tắc khi lướt qua từng ô
                 const activeSector = Math.floor(((360 - (currentRotation % 360) + 270) % 360) / sectorAngleDeg) % numSectors;
                 if (activeSector !== lastSectorIndex) {
                     playTickSound();
