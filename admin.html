@@ -3,76 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHOTO EVE - Trang Quản Trị (Admin)</title>
+    <title>PHOTO EVE ADMIN - Thống Kê</title>
     
-    <!-- Thư viện Firebase Realtime Database -->
+    <!-- SDK Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
             color: #f8fafc;
             margin: 0;
             padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
         }
-        .container {
+        .admin-container {
+            width: 100%;
             max-width: 800px;
-            margin: 0 auto;
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            border: 1px solid #bf953f;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
         }
-        h1 {
+        .header {
             text-align: center;
-            color: #fcf6ba;
-            margin-bottom: 5px;
+            margin-bottom: 24px;
+        }
+        .brand-title {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
         }
         .subtitle {
-            text-align: center;
             color: #94a3b8;
             font-size: 14px;
-            margin-bottom: 20px;
+            margin-top: 4px;
         }
-        .stats-card {
-            background: #334155;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
+        .stat-card {
+            background: rgba(15, 23, 42, 0.8);
             border-left: 4px solid #38bdf8;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
         }
-        .stats-number {
-            font-size: 32px;
+        .stat-number {
+            font-size: 36px;
             font-weight: bold;
             color: #38bdf8;
+            margin-top: 8px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 12px;
         }
         th, td {
             padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #475569;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         th {
-            background-color: #334155;
+            background: rgba(15, 23, 42, 0.9);
             color: #fcf6ba;
+            font-size: 14px;
         }
-        tr:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
+        td { font-size: 14px; }
         .prize-tag {
-            background: #0284c7;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 13px;
+            color: #38bdf8;
+            font-weight: 600;
         }
         .empty-msg {
             text-align: center;
@@ -83,17 +92,17 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>PHOTO EVE ADMIN</h1>
-        <div class="subtitle">Thống Kê Lượt Quay & Giải Thưởng Ngày Hôm Nay</div>
-
-        <!-- Thẻ thống kê tổng lượt quay -->
-        <div class="stats-card">
-            <div>Tổng Số Lượt Quay Trong Ngày</div>
-            <div class="stats-number" id="totalSpins">0</div>
+    <div class="admin-container">
+        <div class="header">
+            <h1 class="brand-title">PHOTO EVE ADMIN</h1>
+            <div class="subtitle">Thống Kê Lượt Quay & Giải Thưởng Ngày Hôm Nay</div>
         </div>
 
-        <!-- Bảng danh sách trúng thưởng -->
+        <div class="stat-card">
+            <div>Tổng Số Lượt Quay Trong Ngày</div>
+            <div class="stat-number" id="totalSpins">0</div>
+        </div>
+
         <h3>📜 Lịch Sử Trúng Thưởng</h3>
         <table>
             <thead>
@@ -105,65 +114,64 @@
             </thead>
             <tbody id="historyTableBody">
                 <tr>
-                    <td colspan="3" class="empty-msg">Đang tải dữ liệu từ Firebase...</td>
+                    <td colspan="3" class="empty-msg">Đang tải dữ liệu...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // Tạo khóa định danh theo ngày dạng: PHOTOEVE_YYYY-MM-DD
+        // 1. Chuẩn hóa Date Key khớp 100% với index.html
         function getTodayKey() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `PHOTOEVE_${year}-${month}-${day}`;
-}
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `PHOTOEVE_${year}-${month}-${day}`;
+        }
 
-const firebaseConfig = { 
-    databaseURL: "https://photoeve-a5e2c-default-rtdb.firebaseio.com/" 
-};
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+        // 2. Khởi tạo Firebase Database
+        const firebaseConfig = { databaseURL: "https://photoeve-a5e2c-default-rtdb.firebaseio.com/" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-const todayKey = getTodayKey();
-const spinRef = database.ref('daily_spins/' + todayKey);
+        // 3. Lắng nghe dữ liệu theo ngày
+        const todayKey = getTodayKey();
+        const spinRef = database.ref('daily_spins/' + todayKey);
 
-// Lắng nghe dữ liệu thay đổi theo thời gian thực (Realtime)
-spinRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    const tableBody = document.getElementById('historyTableBody');
-    const totalDisplay = document.getElementById('totalSpins');
+        spinRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            const tableBody = document.getElementById('historyTableBody');
+            const totalDisplay = document.getElementById('totalSpins');
 
-    if (!data) {
-        totalDisplay.innerText = "0";
-        tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">Chưa có lượt quay nào trong ngày hôm nay.</td></tr>`;
-        return;
-    }
+            if (!data) {
+                totalDisplay.innerText = "0";
+                tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">Chưa có lượt quay nào trong ngày hôm nay.</td></tr>`;
+                return;
+            }
 
-    // Cập nhật số lượt quay
-    totalDisplay.innerText = data.count || 0;
+            // Hiển thị tổng số lượt quay
+            totalDisplay.innerText = data.count || 0;
 
-    // Cập nhật danh sách lịch sử trúng thưởng
-    if (data.history) {
-        const historyArray = Object.values(data.history).reverse();
-        let html = '';
-        
-        historyArray.forEach((item, index) => {
-            html += `
-                <tr>
-                    <td>#${historyArray.length - index}</td>
-                    <td>${item.time}</td>
-                    <td><span class="prize-tag">${item.prize}</span></td>
-                </tr>
-            `;
+            // Hiển thị bảng lịch sử (Lượt mới nhất xếp lên đầu)
+            if (data.history) {
+                const historyArray = Object.values(data.history).reverse();
+                let html = '';
+                
+                historyArray.forEach((item, index) => {
+                    html += `
+                        <tr>
+                            <td>#${historyArray.length - index}</td>
+                            <td>${item.time}</td>
+                            <td><span class="prize-tag">${item.prize}</span></td>
+                        </tr>
+                    `;
+                });
+                tableBody.innerHTML = html;
+            } else {
+                tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">Chưa có lịch sử quay thưởng.</td></tr>`;
+            }
         });
-        tableBody.innerHTML = html;
-    } else {
-        tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">Chưa có lịch sử quay thưởng.</td></tr>`;
-    }
-});
     </script>
 </body>
 </html>
