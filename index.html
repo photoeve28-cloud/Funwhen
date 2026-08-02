@@ -170,13 +170,13 @@
 
     <script>
         // --- 1. QUẢN LÝ KHÓA THỜI GIAN & BỘ ĐẾM ---
-function getTodayKey() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `PHOTOEVE_${year}-${month}-${day}`;
-}
+        function getTodayKey() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `PHOTOEVE_${year}-${month}-${day}`;
+        }
 
         function getWeekKey() {
             const d = new Date();
@@ -202,7 +202,6 @@ function getTodayKey() {
         const firebaseConfig = { databaseURL: "https://photoeve-a5e2c-default-rtdb.firebaseio.com/" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const spinRef = database.ref('daily_spins/' + getTodayKey());
 
         // --- 3. ÂM THANH (WEB AUDIO API) ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -365,6 +364,7 @@ function getTodayKey() {
             let newCompleted = getCompletedSpinsCount() + 1;
             localStorage.setItem(`${getTodayKey()}_TOTAL`, newCompleted);
             renderSpinCounter();
+
             // 1. Xác định vị trí ô và tên giải thưởng
             const winningIndex = determinePrizeIndex();
             const prize = gifts[winningIndex];
@@ -412,7 +412,6 @@ function getTodayKey() {
                 if (progress < 1) {
                     animationId = requestAnimationFrame(animate);
                 } else {
-                    const prize = gifts[winningIndex];
                     playWinSound();
 
                     if (prize === "Chúc Bạn May Mắn Lần Sau") {
