@@ -11,7 +11,7 @@
     
     <title>PHOTO EVE - Vòng Quay May Mắn</title>
     
-    <!-- SDK Firebase -->
+    <!-- SDK Firebase (Phiên bản 8.10.1) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -29,13 +29,12 @@
             min-height: 100vh;
             margin: 0;
             padding: 10px;
-            /* TÔNG NỀN ÁNH KIM SANG TRỌNG */
             background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
             color: #f8fafc;
             overflow-x: hidden;
         }
 
-        /* 1. TIÊU ĐỀ THƯƠNG HIỆU THU GỌN VỪA VẶN */
+        /* 1. TIÊU ĐỀ THƯƠNG HIỆU */
         .brand-header {
             text-align: center;
             margin-bottom: 5px;
@@ -61,7 +60,7 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
-        /* 2. KHUNG VÒNG QUAY TỐI ƯU KÍCH THƯỚC MOBI (280px) */
+        /* 2. KHUNG VÒNG QUAY MOBI (280px) */
         .wheel-container {
             position: relative;
             margin: 8px 0;
@@ -77,7 +76,7 @@
             height: 280px;
         }
         
-        /* KIM CHỈ NỔI BẬT */
+        /* KIM CHỈ VÒNG QUAY */
         .pointer {
             position: absolute;
             top: -12px;
@@ -116,7 +115,7 @@
             transform: none;
         }
 
-        /* 4. DÒNG BÁO KẾT QUẢ GỌN GÀNG KHÔNG ĐẨY MÀN HÌNH */
+        /* 4. KẾT QUẢ VÒNG QUAY */
         #resultText {
             margin-top: 6px;
             font-size: 16px;
@@ -128,7 +127,7 @@
             line-height: 1.3;
         }
 
-        /* 5. PANEL THÔNG TIN LƯỢT QUAY VÀ THỜI GIAN CỐ ĐỊNH TỐT VỊ TRÍ */
+        /* 5. KHUNG THÔNG TIN BỘ ĐẾM */
         .info-panel {
             margin-top: 8px;
             padding: 8px 18px;
@@ -174,7 +173,7 @@
     </div>
 
     <script>
-        // --- 1. QUẢN LÝ KHÓA THỜI GIAN & BỘ ĐẾM ---
+        // --- 1. TẠO KHÓA THỜI GIAN THEO ĐỊNH DẠNG ĐỒNG BỘ VỚI ADMIN ---
         function getTodayKey() {
             const now = new Date();
             const year = now.getFullYear();
@@ -203,12 +202,12 @@
         }
         renderSpinCounter();
 
-        // --- 2. CẤU HÌNH FIREBASE ---
+        // --- 2. CẤU HÌNH FIREBASE KHỚP VỚI ADMIN ---
         const firebaseConfig = { databaseURL: "https://photoeve-a5e2c-default-rtdb.firebaseio.com/" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // --- 3. ÂM THANH (WEB AUDIO API) ---
+        // --- 3. PHÁT ÂM THANH BẰNG WEB AUDIO API ---
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
 
@@ -247,7 +246,7 @@
             });
         }
 
-        // --- 4. ĐỒNG HỒ ---
+        // --- 4. CẬP NHẬT ĐỒNG HỒ ---
         function updateClock() {
             const now = new Date();
             const options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hour12: false };
@@ -260,7 +259,7 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // --- 5. CẤU HÌNH VÒNG QUAY (280x280) ---
+        // --- 5. VẼ BÁNH XE VÒNG QUAY ---
         const canvas = document.getElementById('wheel');
         const ctx = canvas.getContext('2d');
         
@@ -306,19 +305,19 @@
         }
         drawWheel();
 
-        // --- 6. HÀM PHÂN BỔ KẾT QUẢ THEO HẠN NGẠCH (ĐÃ CẬP NHẬT ĐỒNG BỘ) ---
+        // --- 6. LOGIC PHÂN BỔ GIẢI THƯỞNG HỢP LỆ ---
         function determinePrizeIndex() {
             const now = new Date();
             const hour = now.getHours();
-            const dayOfWeek = now.getDay(); // 0: Chủ Nhật, 6: Thứ Bảy
+            const dayOfWeek = now.getDay();
             const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
             const weekKey = getWeekKey();
             const todayKey = getTodayKey();
 
-            const isMorning = (hour >= 8 && hour < 12);   // 08:00 - 11:59
-            const isAfternoon = (hour >= 12 && hour < 18); // 12:00 - 17:59
-            const isEvening = (hour >= 18 && hour < 23);   // 18:00 - 22:59
+            const isMorning = (hour >= 8 && hour < 12);
+            const isAfternoon = (hour >= 12 && hour < 18);
+            const isEvening = (hour >= 18 && hour < 23);
 
             const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
             const gaubongAfternoonWonWeek = parseInt(localStorage.getItem(`${weekKey}_GAUBONG_AFTERNOON`) || '0', 10);
@@ -330,49 +329,41 @@
 
             const rand = Math.random() * 100;
 
-            // A. KHUNG GIỜ SÁNG (08:00 - 11:59)
             if (isMorning) {
                 if (rand < 25 && mockhoaMorningWon < 1) {
                     localStorage.setItem(`${todayKey}_MOCKHOA_MORNING`, mockhoaMorningWon + 1);
                     return Math.random() > 0.5 ? 2 : 5;
                 }
-            }
-            // B. KHUNG GIỜ CHIỀU (12:00 - 17:59)
-            else if (isAfternoon) {
+            } else if (isAfternoon) {
                 if (rand < 15 && gaubongAfternoonWonWeek < 1) {
                     localStorage.setItem(`${weekKey}_GAUBONG_AFTERNOON`, gaubongAfternoonWonWeek + 1);
                     return Math.random() > 0.5 ? 1 : 4;
                 }
-                if (rand >= 15 && rand < 45 && mockhoaAfternoonWon < 2) {
+                if (rand < 45 && mockhoaAfternoonWon < 2) {
                     localStorage.setItem(`${todayKey}_MOCKHOA_AFTERNOON`, mockhoaAfternoonWon + 1);
                     return Math.random() > 0.5 ? 2 : 5;
                 }
-            }
-            // C. KHUNG GIỜ TỐI CAO ĐIỂM (18:00 - 22:59)
-            else if (isEvening) {
+            } else if (isEvening) {
                 if (rand < 5 && vipWonWeek < 2) {
                     localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
                     return 0;
                 }
-
                 const gaubongChance = isWeekend ? 20 : 10;
-                if (rand >= 5 && rand < (5 + gaubongChance) && gaubongEveningWonWeek < 2) {
+                if (rand < (5 + gaubongChance) && gaubongEveningWonWeek < 2) {
                     localStorage.setItem(`${weekKey}_GAUBONG_EVENING`, gaubongEveningWonWeek + 1);
                     return Math.random() > 0.5 ? 1 : 4;
                 }
-
-                if (rand >= 25 && rand < 65 && mockhoaEveningWon < 7) {
+                if (rand < 65 && mockhoaEveningWon < 7) {
                     localStorage.setItem(`${todayKey}_MOCKHOA_EVENING`, mockhoaEveningWon + 1);
                     return Math.random() > 0.5 ? 2 : 5;
                 }
             }
 
-            // D. MẶC ĐỊNH KHÔNG TRÚNG
             const failSectors = [3, 6, 7];
             return failSectors[Math.floor(Math.random() * failSectors.length)];
         }
 
-        // --- 7. HOẠT HỌA QUAY 12 GIÂY KỊCH TÍNH ---
+        // --- 7. XỬ LÝ QUAY VÀ ĐẨY DỮ LIỆU SANG FIREBASE ---
         let isSpinning = false;
         let animationId = null;
         let currentRotation = 0; 
@@ -385,7 +376,7 @@
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
-            spinBtn.disabled = true; // Khóa nút khi đang quay
+            spinBtn.disabled = true;
             
             subText.style.display = 'none';
             resultText.style.display = 'none';
@@ -396,17 +387,15 @@
             localStorage.setItem(`${getTodayKey()}_TOTAL`, newCompleted);
             renderSpinCounter();
 
-            // 1. Xác định vị trí ô và tên giải thưởng
             const winningIndex = determinePrizeIndex();
             const prize = gifts[winningIndex];
 
-            // 2. Gửi dữ liệu lượt quay và giải thưởng lên Firebase
+            // Gửi dữ liệu về Firebase Database (Khớp đường dẫn với file admin.html)
             const spinTime = new Date().toLocaleTimeString('vi-VN');
             const currentTodayKey = getTodayKey();
             const todaySpinRef = database.ref('daily_spins/' + currentTodayKey);
 
             todaySpinRef.child('count').transaction((val) => (val || 0) + 1);
-
             todaySpinRef.child('history').push({
                 time: spinTime,
                 prize: prize
@@ -450,7 +439,7 @@
                     }
                     resultText.style.display = 'block';
                     isSpinning = false;
-                    spinBtn.disabled = false; // Mở lại nút quay khi hoàn thành
+                    spinBtn.disabled = false;
                 }
             }
 
