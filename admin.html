@@ -3,175 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHOTO EVE ADMIN - Thống Kê</title>
-    
-    <!-- SDK Firebase -->
+    <title>PHOTO EVE ADMIN - Quản Lý Lịch Sử Quay</title>
+
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 60%, #020617 100%);
+            background: #0f172a;
             color: #f8fafc;
             margin: 0;
             padding: 20px;
-            min-height: 100vh;
             display: flex;
             justify-content: center;
         }
-        .admin-container {
-            width: 100%;
-            max-width: 800px;
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(212, 175, 55, 0.4);
+
+        .admin-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.3);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
-        .header {
+
+        .header-title {
             text-align: center;
-            margin-bottom: 24px;
-        }
-        .brand-title {
             font-size: 28px;
-            font-weight: 900;
+            font-weight: 800;
+            color: #fcf6ba;
+            margin: 0 0 5px 0;
             letter-spacing: 2px;
-            background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
         }
-        .subtitle {
-            color: #94a3b8;
+
+        .header-subtitle {
+            text-align: center;
             font-size: 14px;
-            margin-top: 4px;
+            color: #94a3b8;
+            margin-bottom: 20px;
         }
-        .stat-card {
-            background: rgba(15, 23, 42, 0.8);
+
+        /* KHUNG CHỌN NGÀY THỐNG KÊ */
+        .filter-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .date-input {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .date-input::-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        /* KHUNG THỐNG KÊ TỔNG LƯỢT QUAY */
+        .stats-box {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.5), rgba(15, 23, 42, 0.8));
             border-left: 4px solid #38bdf8;
             border-radius: 8px;
             padding: 16px;
-            margin-bottom: 24px;
             text-align: center;
+            margin-bottom: 24px;
         }
-        .stat-number {
+
+        .stats-title {
+            font-size: 15px;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        .stats-count {
             font-size: 36px;
-            font-weight: bold;
+            font-weight: 800;
             color: #38bdf8;
-            margin-top: 8px;
         }
+
+        /* BẢNG LỊCH SỬ */
+        .history-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
+            font-size: 14px;
         }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+
         th {
             background: rgba(15, 23, 42, 0.9);
             color: #fcf6ba;
-            font-size: 14px;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.3);
         }
-        td { font-size: 14px; }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
         .prize-tag {
-            color: #38bdf8;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: #0284c7;
+            color: #ffffff;
             font-weight: 600;
+            font-size: 13px;
         }
-        .empty-msg {
+
+        .no-data {
             text-align: center;
             color: #64748b;
             padding: 20px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <div class="admin-container">
-        <div class="header">
-            <h1 class="brand-title">PHOTO EVE ADMIN</h1>
-            <div class="subtitle">Thống Kê Lượt Quay & Giải Thưởng Ngày Hôm Nay</div>
+    <div class="admin-card">
+        <h1 class="header-title">PHOTO EVE ADMIN</h1>
+        <div class="header-subtitle">Thống Kê Lượt Quay & Lịch Sử Trúng Thưởng</div>
+
+        <!-- BỘ CHỌN NGÀY XEM LỊCH SỬ -->
+        <div class="filter-section">
+            <span class="filter-label">📅 Chọn ngày xem lịch sử:</span>
+            <input type="date" id="datePicker" class="date-input">
         </div>
 
-        <div class="stat-card">
-            <div>Tổng Số Lượt Quay Trong Ngày</div>
-            <div class="stat-number" id="totalSpins">0</div>
+        <!-- THỐNG KÊ TỔNG LƯỢT QUAY -->
+        <div class="stats-box">
+            <div class="stats-title">Tổng Số Lượt Quay Trong Ngày</div>
+            <div class="stats-count" id="totalSpinsDisplay">0</div>
         </div>
 
-        <h3>📜 Lịch Sử Trúng Thưởng</h3>
+        <!-- BẢNG DANH SÁCH -->
+        <div class="history-title">📜 Lịch Sử Trúng Thưởng</div>
         <table>
             <thead>
                 <tr>
-                    <th>STT</th>
-                    <th>Thời Gian</th>
-                    <th>Giải Thưởng Nhận Được</th>
+                    <th style="width: 15%;">STT</th>
+                    <th style="width: 30%;">Thời Gian</th>
+                    <th style="width: 55%;">Giải Thưởng Nhận Được</th>
                 </tr>
             </thead>
             <tbody id="historyTableBody">
                 <tr>
-                    <td colspan="3" class="empty-msg">Đang tải dữ liệu...</td>
+                    <td colspan="3" class="no-data">Đang tải dữ liệu...</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <script>
-        // 1. Chuẩn hóa Date Key khớp 100% với index.html
-        function getTodayKey() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            return `PHOTOEVE_${year}-${month}-${day}`;
-        }
-
-        // 2. Khởi tạo Firebase Database
+        // 1. CẤU HÌNH FIREBASE
         const firebaseConfig = { databaseURL: "https://photoeve-a5e2c-default-rtdb.firebaseio.com/" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 3. Lắng nghe dữ liệu theo ngày
-        const todayKey = getTodayKey();
-        const spinRef = database.ref('daily_spins/' + todayKey);
+        const datePicker = document.getElementById('datePicker');
+        const totalSpinsDisplay = document.getElementById('totalSpinsDisplay');
+        const historyTableBody = document.getElementById('historyTableBody');
 
-        spinRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            const tableBody = document.getElementById('historyTableBody');
-            const totalDisplay = document.getElementById('totalSpins');
+        let currentRef = null;
 
-            if (!data) {
-                totalDisplay.innerText = "0";
-                tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">Chưa có lượt quay nào trong ngày hôm nay.</td></tr>`;
-                return;
+        // 2. THIẾT LẬP NGÀY MẶC ĐỊNH LÀ HÔM NAY (Định dạng YYYY-MM-DD)
+        function getTodayString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Khởi tạo giá trị mặc định cho ô chọn ngày
+        datePicker.value = getTodayString();
+
+        // 3. HÀM TẢI DỮ LIỆU TỪ FIREBASE THEO NGÀY ĐƯỢC CHỌN
+        function loadHistoryForDate(selectedDate) {
+            // Nếu đang lắng nghe ngày cũ thì gỡ bỏ listener
+            if (currentRef) {
+                currentRef.off();
             }
 
-            // Hiển thị tổng số lượt quay
-            totalDisplay.innerText = data.count || 0;
+            const dbKey = `PHOTOEVE_${selectedDate}`;
+            currentRef = database.ref(`daily_spins/${dbKey}`);
 
-            // Hiển thị bảng lịch sử (Lượt mới nhất xếp lên đầu)
-            if (data.history) {
-                const historyArray = Object.values(data.history).reverse();
-                let html = '';
-                
-                historyArray.forEach((item, index) => {
-                    html += `
-                        <tr>
-                            <td>#${historyArray.length - index}</td>
-                            <td>${item.time}</td>
-                            <td><span class="prize-tag">${item.prize}</span></td>
-                        </tr>
-                    `;
-                });
-                tableBody.innerHTML = html;
-            } else {
-                tableBody.innerHTML = `<tr><td colspan="3" class="empty-msg">Chưa có lịch sử quay thưởng.</td></tr>`;
+            currentRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+
+                if (!data) {
+                    totalSpinsDisplay.innerText = "0";
+                    historyTableBody.innerHTML = `<tr><td colspan="3" class="no-data">Không có dữ liệu lượt quay nào cho ngày ${selectedDate}.</td></tr>`;
+                    return;
+                }
+
+                // Cập nhật tổng số lượt quay
+                totalSpinsDisplay.innerText = data.count || 0;
+
+                // Cập nhật danh sách bảng lịch sử
+                if (data.history) {
+                    const historyArray = Object.values(data.history);
+                    historyTableBody.innerHTML = "";
+
+                    // Đảo ngược danh sách để lượt mới nhất lên đầu (như giao diện mẫu)
+                    const totalItems = historyArray.length;
+                    historyArray.reverse().forEach((item, index) => {
+                        const stt = `#${totalItems - index}`;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${stt}</strong></td>
+                            <td>${item.time || '--:--:--'}</td>
+                            <td><span class="prize-tag">${item.prize || 'Chưa xác định'}</span></td>
+                        `;
+                        historyTableBody.appendChild(tr);
+                    });
+                } else {
+                    historyTableBody.innerHTML = `<tr><td colspan="3" class="no-data">Chưa có lượt trúng thưởng nào trong ngày.</td></tr>`;
+                }
+            });
+        }
+
+        // 4. LẮNG NGHE SỰ KIỆN KHI NGƯỜI DÙNG THAY ĐỔI NGÀY
+        datePicker.addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadHistoryForDate(e.target.value);
             }
         });
+
+        // Tải dữ liệu mặc định ban đầu (ngày hôm nay)
+        loadHistoryForDate(datePicker.value);
     </script>
 </body>
 </html>
