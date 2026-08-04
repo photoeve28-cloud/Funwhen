@@ -305,62 +305,83 @@
         }
         drawWheel();
 
-        // --- 6. LOGIC PHÂN BỔ GIẢI THƯỞNG HỢP LỆ ---
-        function determinePrizeIndex() {
-            const now = new Date();
-            const hour = now.getHours();
-            const dayOfWeek = now.getDay();
-            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+    // --- 6. LOGIC PHÂN BỔ GIẢI THƯỞNG HỢP LỆ (ĐÃ BỔ SUNG GIỚI HẠN NGÀY CHO GẤU BÔNG & ALBUM VIP) ---
+function determinePrizeIndex() {
+    const now = new Date();
+    const hour = now.getHours();
+    const dayOfWeek = now.getDay(); // 0: Chủ Nhật, 6: Thứ 7
+    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
 
-            const weekKey = getWeekKey();
-            const todayKey = getTodayKey();
+    const weekKey = getWeekKey();   // Khóa quản lý theo tuần (VD: PHOTOEVE_WEEK_2026-W32)
+    const todayKey = getTodayKey(); // Khóa quản lý theo ngày (VD: PHOTOEVE_2026-08-04)
 
-            const isMorning = (hour >= 8 && hour < 12);
-            const isAfternoon = (hour >= 12 && hour < 18);
-            const isEvening = (hour >= 18 && hour < 23);
+    // 1. Phân chia các khung giờ trong ngày
+    const isMorning = (hour >= 8 && hour < 12);
+    const isAfternoon = (hour >= 12 && hour < 18);
+    const isEvening = (hour >= 18 && hour < 23);
 
-            const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
-            const gaubongAfternoonWonWeek = parseInt(localStorage.getItem(`${weekKey}_GAUBONG_AFTERNOON`) || '0', 10);
-            const gaubongEveningWonWeek = parseInt(localStorage.getItem(`${weekKey}_GAUBONG_EVENING`) || '0', 10);
+    // 2. Lấy dữ liệu đếm giải ALBUM VIP (Tuần & Ngày)
+    const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
+    const vipWonToday = parseInt(localStorage.getItem(`${todayKey}_VIP`) || '0', 10);
 
-            const mockhoaMorningWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_MORNING`) || '0', 10);
-            const mockhoaAfternoonWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_AFTERNOON`) || '0', 10);
-            const mockhoaEveningWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_EVENING`) || '0', 10);
+    // 3. Lấy dữ liệu đếm giải GẤU BÔNG (Tuần & Ngày) - BỔ SUNG MỚI
+    const gauBongWonWeek = parseInt(localStorage.getItem(`${weekKey}_GAUBONG_TOTAL`) || '0', 10);
+    const gauBongWonToday = parseInt(localStorage.getItem(`${todayKey}_GAUBONG_TODAY`) || '0', 10);
 
-            const rand = Math.random() * 100;
+    // 4. Lấy dữ liệu đếm MÓC KHÓA (Theo từng khung giờ trong ngày)
+    const mockhoaMorningWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_MORNING`) || '0', 10);
+    const mockhoaAfternoonWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_AFTERNOON`) || '0', 10);
+    const mockhoaEveningWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_EVENING`) || '0', 10);
 
-            if (isMorning) {
-                if (rand < 25 && mockhoaMorningWon < 1) {
-                    localStorage.setItem(`${todayKey}_MOCKHOA_MORNING`, mockhoaMorningWon + 1);
-                    return Math.random() > 0.5 ? 2 : 5;
-                }
-            } else if (isAfternoon) {
-                if (rand < 15 && gaubongAfternoonWonWeek < 1) {
-                    localStorage.setItem(`${weekKey}_GAUBONG_AFTERNOON`, gaubongAfternoonWonWeek + 1);
-                    return Math.random() > 0.5 ? 1 : 4;
-                }
-                if (rand < 45 && mockhoaAfternoonWon < 2) {
-                    localStorage.setItem(`${todayKey}_MOCKHOA_AFTERNOON`, mockhoaAfternoonWon + 1);
-                    return Math.random() > 0.5 ? 2 : 5;
-                }
-            } else if (isEvening) {
-                if (rand < 5 && vipWonWeek < 2) {
-                    localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
-                    return 0;
-                }
-                const gaubongChance = isWeekend ? 20 : 10;
-                if (rand < (5 + gaubongChance) && gaubongEveningWonWeek < 2) {
-                    localStorage.setItem(`${weekKey}_GAUBONG_EVENING`, gaubongEveningWonWeek + 1);
-                    return Math.random() > 0.5 ? 1 : 4;
-                }
-                if (rand < 65 && mockhoaEveningWon < 7) {
-                    localStorage.setItem(`${todayKey}_MOCKHOA_EVENING`, mockhoaEveningWon + 1);
-                    return Math.random() > 0.5 ? 2 : 5;
-                }
-            }
+    const rand = Math.random() * 100;
 
-            const failSectors = [3, 6, 7];
-            return failSectors[Math.floor(Math.random() * failSectors.length)];
+    // --- KHUNG GIỜ SÁNG (08:00 - 11:59) ---
+    if (isMorning) {
+        if (rand < 25 && mockhoaMorningWon < 1) { // Tối đa 1 Móc khóa / sáng
+            localStorage.setItem(`${todayKey}_MOCKHOA_MORNING`, mockhoaMorningWon + 1);
+            return Math.random() > 0.5 ? 2 : 5;
+        }
+    } 
+    // --- KHUNG GIỜ CHIỀU (12:00 - 17:59) ---
+    else if (isAfternoon) {
+        // GẤU BÔNG CHIỀU: Kiểm tra cả giới hạn Tuần (< 3) và giới hạn Ngày (< 1)
+        if (rand < 15 && gauBongWonWeek < 3 && gauBongWonToday < 1) { 
+            localStorage.setItem(`${weekKey}_GAUBONG_TOTAL`, gauBongWonWeek + 1);
+            localStorage.setItem(`${todayKey}_GAUBONG_TODAY`, gauBongWonToday + 1);
+            return Math.random() > 0.5 ? 1 : 4;
+        }
+        if (rand < 45 && mockhoaAfternoonWon < 3) { // Tối đa 3 Móc khóa / chiều
+            localStorage.setItem(`${todayKey}_MOCKHOA_AFTERNOON`, mockhoaAfternoonWon + 1);
+            return Math.random() > 0.5 ? 2 : 5;
+        }
+    } 
+    // --- KHUNG GIỜ TỐI (18:00 - 22:59) ---
+    else if (isEvening) {
+        // ALBUM VIP: Kiểm tra cả giới hạn Tuần (< 2) và giới hạn Ngày (< 1)
+        if (rand < 5 && vipWonWeek < 2 && vipWonToday < 1) {
+            localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
+            localStorage.setItem(`${todayKey}_VIP`, vipWonToday + 1);
+            return 0; // Vị trí ô VIP
+        }
+        
+        // GẤU BÔNG TỐI: Kiểm tra cả giới hạn Tuần (< 3) và giới hạn Ngày (< 1)
+        const gaubongChance = isWeekend ? 20 : 10;
+        if (rand < (5 + gaubongChance) && gauBongWonWeek < 3 && gauBongWonToday < 1) {
+            localStorage.setItem(`${weekKey}_GAUBONG_TOTAL`, gauBongWonWeek + 1);
+            localStorage.setItem(`${todayKey}_GAUBONG_TODAY`, gauBongWonToday + 1);
+            return Math.random() > 0.5 ? 1 : 4;
+        }
+        
+        if (rand < 65 && mockhoaEveningWon < 8) { // Tối đa 8 Móc khóa / tối
+            localStorage.setItem(`${todayKey}_MOCKHOA_EVENING`, mockhoaEveningWon + 1);
+            return Math.random() > 0.5 ? 2 : 5;
+        }
+    }
+
+    // --- MẶC ĐỊNH: Trúng ô "Chúc Bạn May Mắn Lần Sau" (vị trí 3, 6, 7) ---
+    const failSectors = [3, 6, 7];
+    return failSectors[Math.floor(Math.random() * failSectors.length)];
+}
         }
 
         // --- 7. XỬ LÝ QUAY VÀ ĐẨY DỮ LIỆU SANG FIREBASE ---
