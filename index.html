@@ -305,59 +305,47 @@
         }
         drawWheel();
 
-    // --- 6. LOGIC PHÂN BỔ GIẢI THƯỞNG HOÀN CHÍNH (ALBUM VIP & MÓC KHÓA - BỎ GẤU BÔNG) ---
+    // --- 6. LOGIC PHÂN BỔ GIẢI THƯỞNG HỢP LỆ (ĐÃ CẬP NHẬT MỐC THỜI GIAN MỚI) ---
 function determinePrizeIndex() {
     const now = new Date();
     const hour = now.getHours();
 
-    const weekKey = getWeekKey();   // Khóa quản lý theo tuần
     const todayKey = getTodayKey(); // Khóa quản lý theo ngày
 
-    // 1. Phân chia các khung giờ trong ngày
-    const isMorning = (hour >= 8 && hour < 12);
-    const isAfternoon = (hour >= 12 && hour < 18);
-    const isEvening = (hour >= 18 && hour < 23);
+    // 1. Phân chia lại 3 khung giờ theo yêu cầu mới
+    const isMorning = (hour >= 10 && hour < 13);   // Sáng: 10h00 - 13h00
+    const isAfternoon = (hour >= 13 && hour < 18); // Chiều: 13h00 - 18h00
+    const isEvening = (hour >= 18 && hour < 23);   // Tối: 18h00 - 23h00
 
-    // 2. Lấy dữ liệu đếm ALBUM VIP (Tối đa 2/tuần, 1/ngày)
-    const vipWonWeek = parseInt(localStorage.getItem(`${weekKey}_VIP`) || '0', 10);
-    const vipWonToday = parseInt(localStorage.getItem(`${todayKey}_VIP`) || '0', 10);
-
-    // 3. Lấy dữ liệu đếm MÓC KHÓA XINH (Sáng 2, Chiều 5, Tối 13 -> Tổng 20/ngày)
+    // 2. Lấy dữ liệu đếm MÓC KHÓA XINH từ localStorage (Sáng 3, Chiều 5, Tối 12 -> Tổng 20/ngày)
     const mockhoaMorningWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_MORNING`) || '0', 10);
     const mockhoaAfternoonWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_AFTERNOON`) || '0', 10);
     const mockhoaEveningWon = parseInt(localStorage.getItem(`${todayKey}_MOCKHOA_EVENING`) || '0', 10);
 
     const rand = Math.random() * 100;
 
-    // --- KHUNG GIỜ SÁNG (08:00 - 11:59) ---
+    // --- KHUNG GIỜ SÁNG (10:00 - 12:59) ---
     if (isMorning) {
-        // Tối đa 2 Móc khóa / sáng (Tỉ lệ xuất hiện 25%)
-        if (rand < 25 && mockhoaMorningWon < 2) { 
+        // Tối đa 3 Móc khóa / sáng (Tỉ lệ 30%)
+        if (rand < 30 && mockhoaMorningWon < 3) { 
             localStorage.setItem(`${todayKey}_MOCKHOA_MORNING`, mockhoaMorningWon + 1);
-            return Math.random() > 0.5 ? 2 : 5; // Trả về vị trí ô Móc khóa
+            return Math.random() > 0.5 ? 2 : 5; // Vị trí ô Móc khóa xinh
         }
     } 
-    // --- KHUNG GIỜ CHIỀU (12:00 - 17:59) ---
+    // --- KHUNG GIỜ CHIỀU (13:00 - 17:59) ---
     else if (isAfternoon) {
-        // Tối đa 5 Móc khóa / chiều (Tỉ lệ xuất hiện 45%)
+        // Tối đa 5 Móc khóa / chiều (Tỉ lệ 45%)
         if (rand < 45 && mockhoaAfternoonWon < 5) { 
             localStorage.setItem(`${todayKey}_MOCKHOA_AFTERNOON`, mockhoaAfternoonWon + 1);
-            return Math.random() > 0.5 ? 2 : 5; // Trả về vị trí ô Móc khóa
+            return Math.random() > 0.5 ? 2 : 5; // Vị trí ô Móc khóa xinh
         }
     } 
     // --- KHUNG GIỜ TỐI (18:00 - 22:59) ---
     else if (isEvening) {
-        // ALBUM VIP: Kiểm tra cả giới hạn Tuần (< 2) và Ngày (< 1) với tỉ lệ 5%
-        if (rand < 5 && vipWonWeek < 2 && vipWonToday < 1) {
-            localStorage.setItem(`${weekKey}_VIP`, vipWonWeek + 1);
-            localStorage.setItem(`${todayKey}_VIP`, vipWonToday + 1);
-            return 0; // Trả về vị trí ô Album VIP
-        }
-        
-        // Tối đa 13 Móc khóa / tối (Tỉ lệ xuất hiện 65%)
-        if (rand < 65 && mockhoaEveningWon < 13) { 
+        // Tối đa 12 Móc khóa / tối (Tỉ lệ 65%)
+        if (rand < 65 && mockhoaEveningWon < 12) { 
             localStorage.setItem(`${todayKey}_MOCKHOA_EVENING`, mockhoaEveningWon + 1);
-            return Math.random() > 0.5 ? 2 : 5; // Trả về vị trí ô Móc khóa
+            return Math.random() > 0.5 ? 2 : 5; // Vị trí ô Móc khóa xinh
         }
     }
 
